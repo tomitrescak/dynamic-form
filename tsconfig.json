@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "lib": ["esnext", "dom"],
+    "target": "es5",
+    "experimentalDecorators": false,
+    "checkJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "noEmit": false,
+    "jsx": "react",
+    "skipDefaultLibCheck": true,
+    "strictNullChecks": false,
+    "isolatedModules": false,
+    "declaration": true,
+    "plugins": [
+      {
+        "name": "typescript-tslint-plugin",
+        "alwaysShowRuleFailuresAsWarnings": false,
+        "ignoreDefinitionFiles": true,
+        "disableNoUnusedVariableRule": true,
+        "suppressWhileTypeErrorsPresent": false,
+        "mockTypeScriptVersion": false
+      }
+    ]
+  },
+  "include": ["src"]
+}

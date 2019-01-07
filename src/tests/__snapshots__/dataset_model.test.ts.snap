@@ -1,0 +1,160 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Dataset creates a default value 1`] = `
+Object {
+  "accounts": Array [
+    Object {
+      "money": undefined,
+      "number": undefined,
+    },
+  ],
+  "address": Object {
+    "number": undefined,
+    "street": undefined,
+  },
+  "age": 0,
+  "dateMarried": undefined,
+  "fatherAge": undefined,
+  "married": false,
+  "name": undefined,
+  "salary": 300,
+}
+`;
+
+exports[`Dataset creates a default value 2`] = `
+Object {
+  "money": undefined,
+  "number": undefined,
+}
+`;
+
+exports[`Dataset creates a root with object representation 1`] = `
+Schema {
+  "parent": null,
+  "properties": Object {
+    "accountTotal": Schema {
+      "default": "this.accounts.reduce((p, n) => n.money + p, 0)",
+      "parent": [Circular],
+      "type": "expression",
+    },
+    "accounts": Schema {
+      "items": Schema {
+        "parent": [Circular],
+        "properties": Object {
+          "money": Schema {
+            "parent": [Circular],
+            "type": "number",
+          },
+          "number": Schema {
+            "parent": [Circular],
+            "pattern": /\\\\d\\\\d\\\\d-\\\\d\\\\d\\\\d/,
+            "required": true,
+            "type": "string",
+          },
+        },
+        "required": Array [
+          "number",
+        ],
+        "type": "object",
+      },
+      "maxItems": 3,
+      "minItems": 1,
+      "parent": [Circular],
+      "type": "array",
+      "uniqueItems": true,
+    },
+    "address": Schema {
+      "parent": [Circular],
+      "properties": Object {
+        "number": Schema {
+          "exclusiveMaximum": 1000,
+          "exclusiveMinimum": 0,
+          "parent": [Circular],
+          "type": "number",
+        },
+        "street": Schema {
+          "maxLength": 30,
+          "minLength": 5,
+          "parent": [Circular],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "age": Schema {
+      "default": 0,
+      "maximum": 130,
+      "minimum": 0,
+      "parent": [Circular],
+      "type": "integer",
+    },
+    "dateMarried": Schema {
+      "parent": [Circular],
+      "type": "date",
+    },
+    "fatherAge": Schema {
+      "expression": "value > this.age + 18",
+      "parent": [Circular],
+      "type": "integer",
+      "validationMessage": "Father age must be at least 18 years more then your age",
+    },
+    "married": Schema {
+      "default": false,
+      "parent": [Circular],
+      "type": "boolean",
+    },
+    "name": Schema {
+      "parent": [Circular],
+      "required": true,
+      "type": "string",
+    },
+    "salary": Schema {
+      "default": 300,
+      "minimum": 0,
+      "parent": [Circular],
+      "type": "number",
+    },
+  },
+  "required": Array [
+    "name",
+  ],
+  "type": "object",
+}
+`;
+
+exports[`Dataset creates mst with default values 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset creates mst with values 1`] = `
+Object {
+  "accounts": Array [
+    Object {
+      "money": 200,
+      "number": "111-222",
+    },
+  ],
+  "address": Object {
+    "number": 4,
+    "street": "Elm street",
+  },
+  "age": 50,
+  "dateMarried": 2017-02-02T00:00:00.000Z,
+  "fatherAge": 20,
+  "married": true,
+  "name": "Tomas",
+  "salary": 2300.34,
+}
+`;

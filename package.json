@@ -1,0 +1,43 @@
+{
+  "name": "@tomino/dynamic-form",
+  "private": false,
+  "version": "1.0.7",
+  "description": "Dynamic form harnessing power of mobx-state-tree and JSON schema",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomitrescak/dynamic-form.git"
+  },
+  "keywords": [
+    "mobx",
+    "mobx-state-tree",
+    "react"
+  ],
+  "author": "Tomi Trescak <tomi.trescak@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tomitrescak/dynamic-form/issues"
+  },
+  "homepage": "https://github.com/tomitrescak/dynamic-form#readme",
+  "devDependencies": {
+    "@types/jest": "^23.3.10",
+    "jest": "^23.6.0",
+    "jest-cli": "^23.6.0",
+    "mobx": "^5.7.0",
+    "mobx-state-tree": "^3.9.0",
+    "mst-middlewares": "^3.9.0",
+    "ts-jest": "^23.10.5",
+    "typescript": "^3.2.2"
+  },
+  "jest": {
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@tomino/toolbelt": "^1.0.4"
+  }
+}
