@@ -1,10 +1,10 @@
-import { JSONSchema } from "./json_schema";
-import { FormElement, FormDefinition } from "./form_definition";
+import { JSONSchema } from './json_schema';
+import { FormElement, FormDefinition } from './form_definition';
 
 type Resource = {
   type: string;
-  content: string;
-} 
+  content?: string;
+};
 
 export function generateSchema(schema: any, resources: Resource[]) {
   const forms = resources.filter(r => r.type === 'Form');
@@ -21,9 +21,26 @@ export function generateSchema(schema: any, resources: Resource[]) {
   return finalSchema;
 }
 
-function copyElements(formElements: FormElement[], originalSchema: JSONSchema, newSchema: JSONSchema) {
+function copyElements(
+  formElements: FormElement[],
+  originalSchema: JSONSchema,
+  newSchema: JSONSchema
+) {
   for (let elem of formElements) {
     copyProperties(originalSchema, newSchema, elem.source.split('.'));
+
+    // remove all properties from "required" list that no longer appear in the new list of properties
+    if (originalSchema.required) {
+      newSchema.required = [...originalSchema.required];
+
+      let newKeys = Object.getOwnPropertyNames(newSchema.properties);
+      for (let i = newSchema.required.length - 1; i >= 0; i--) {
+        let key = newSchema.required[i];
+        if (newKeys.indexOf(key) === -1) {
+          newSchema.required.splice(i, 1);
+        }
+      }
+    }
 
     if (elem.elements && elem.elements.length) {
       copyElements(
@@ -50,9 +67,7 @@ function copyProperties(originalSchema: JSONSchema, newSchema: JSONSchema, parts
 
   let extractedSchema = originalSchema.properties[part];
   if (!extractedSchema) {
-    throw new Error(
-      `Schema ${JSON.stringify(originalSchema)} does not have a parameters ${part}`
-    );
+    throw new Error(`Schema ${JSON.stringify(originalSchema)} does not have a parameters ${part}`);
   }
   originalSchema = extractedSchema;
 
