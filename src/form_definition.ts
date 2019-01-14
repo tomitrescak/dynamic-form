@@ -25,6 +25,7 @@ export interface FormElement {
   column?: number;
   width?: number;
   source?: string;
+  sourceRef?: string;
   label?: string;
   inline?: boolean;
   list?: string;

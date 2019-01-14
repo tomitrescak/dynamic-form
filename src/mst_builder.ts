@@ -105,7 +105,35 @@ export function buildStore(schema: Schema) {
     .views(viewDefinition)
     .actions(() => ({
       getSchema(key: string) {
-        return key ? schema.properties[key] : schema;
+        if (!key) {
+          return schema;
+        }
+        if (key.indexOf('.') >= 0) {
+          const parts = key.split('.');
+          let property = schema;
+          do {
+            const first = parts.shift();
+            property = property.properties[first];
+            if (!property) {
+              throw new Error(
+                `Could not find key ${first} for key ${key} in schema with properties [${Object.getOwnPropertyNames(
+                  schema.properties
+                ).join(',')}]`
+              );
+            }
+          } while (parts.length > 0);
+          return property;
+        }
+
+        const value = key ? schema.properties[key] : schema;
+        if (!value) {
+          throw new Error(
+            `Could not find key ${key} in schema with properties [${Object.getOwnPropertyNames(
+              schema.properties
+            ).join(',')}]`
+          );
+        }
+        return value;
       }
     }));
 
