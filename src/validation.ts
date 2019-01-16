@@ -80,6 +80,13 @@ function isFloat(n: string) {
 //     : message || i18n`Expected positive integer value`;
 // }
 
+export function m(invalid: boolean, message: string) {
+  return {
+    message,
+    invalid
+  }
+}
+
 export function IntValidator(value: number | string, message?: string) {
   return value == null || value === '' || isInt(value.toString())
     ? ''

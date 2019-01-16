@@ -77,7 +77,7 @@ export class FormModel {
         // form can change owner
         let result = this.validateWithReport(
           element,
-          element.source ? owner.getValue(element.source) : root
+          element.source ? owner.getValue(element.source) : owner
         );
         total += result.total;
         valid += result.valid;
@@ -105,7 +105,7 @@ export class FormModel {
       // if the element is not required and it does not have any value
       // we exclude it from the validation
 
-      if (!isRequired && !owner.getValue(element.source)) {
+      if (!element.source || (!isRequired && !owner.getValue(element.source))) {
         continue;
       }
 

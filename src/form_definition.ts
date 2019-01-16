@@ -1,18 +1,20 @@
 export type FormControl =
-  | 'Input'
-  | 'Select'
-  | 'Formula'
+  | 'ApproveButton'
   | 'Checkbox'
+  | 'DeleteButton'
+  | 'Form'
+  | 'Formula'
+  | 'Image'
+  | 'Input'
   | 'Radio'
-  | 'Textarea'
+  | 'RejectButton'
   | 'Repeater'
+  | 'Select'
+  | 'Signature'
   | 'Table'
   | 'Text'
-  | 'Form'
-  | 'DeleteButton'
-  | 'ApproveButton'
-  | 'RejectButton'
-  | 'Signature';
+  | 'Textarea'
+  | 'Value';
 
 export interface FormDefinition {
   name: string;
@@ -35,4 +37,5 @@ export interface FormElement {
   controlProps?: { [index: string]: any };
   vertical?: boolean;
   elements?: FormElement[];
+  url?: string;
 }

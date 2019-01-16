@@ -38,12 +38,13 @@ describe('Preview', () => {
     let preview = model.createHtmlPreview();
     expect(removeWs(preview)).toBe(`<table>
 <tbody>
+<tr style="display: none"><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /></tr>
 
 </tbody>
 </table>`);
   });
 
-  fit('generates basic', () => {
+  it('generates basic', () => {
     let model = new FormModel(
       {
         description: 'Desc',
