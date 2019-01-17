@@ -18,6 +18,7 @@
     "strictNullChecks": false,
     "isolatedModules": false,
     "declaration": true,
+    "sourceMap": true,
     "plugins": [
       {
         "name": "typescript-tslint-plugin",

@@ -92,7 +92,7 @@ export class Schema {
     if (schema.type === 'object') {
       this.properties = {};
       for (let key of Object.getOwnPropertyNames(schema.properties)) {
-        this.properties[key] = new Schema(schema.properties[key] as JSONSchema, this, key);
+        this.properties[key] = new Schema(schema.properties[key], this, key);
       }
     }
 
@@ -117,6 +117,15 @@ export class Schema {
       this.oneOf = oneOf.map(s => {
         return new Schema({ ...rest, ...s }, this, key);
       });
+    }
+  }
+
+  static create(jsonSchema: JSONSchema) {
+    let schema = new Schema(jsonSchema);
+    
+    // this duplicates schemas
+    if (jsonSchema.anyOf) {
+      // return multiple schemas
     }
   }
 

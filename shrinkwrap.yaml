@@ -1,5 +1,6 @@
 dependencies:
   '@tomino/toolbelt': 'link:../toolbelt'
+  deepmerge: 3.1.0
 devDependencies:
   '@types/jest': 23.3.12
   jest: 23.6.0
@@ -682,6 +683,12 @@ packages:
     dev: true
     resolution:
       integrity: sha1-s2nW+128E+7PUk+RsHD+7cNXzzQ=
+  /deepmerge/3.1.0:
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha512-/TnecbwXEdycfbsM2++O3eGiatEFHjjNciHEwJclM+T5Kd94qD1AP+2elP/Mq0L5b9VZJao5znR01Mz6eX8Seg==
   /default-require-extensions/1.0.0:
     dependencies:
       strip-bom: 2.0.0
@@ -3586,6 +3593,7 @@ shrinkwrapVersion: 3
 specifiers:
   '@tomino/toolbelt': ^1.0.4
   '@types/jest': ^23.3.10
+  deepmerge: ^3.1.0
   jest: ^23.6.0
   jest-cli: ^23.6.0
   mobx: ^5.7.0

@@ -123,7 +123,7 @@ describe('Schema', () => {
       });
     });
 
-    fit('validates combined value', () => {
+    it('validates combined value', () => {
       // ====================================
       // if all are false it is an error
       // one value
@@ -151,7 +151,7 @@ describe('Schema', () => {
           }
         ]
       });
-      expect(schema.interpretResults(result)).toEqual({})
+      expect(schema.interpretResults(result)).toEqual({});
     });
 
     it('validates anyOf number value', () => {

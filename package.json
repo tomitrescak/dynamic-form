@@ -38,6 +38,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@tomino/toolbelt": "^1.0.4"
+    "@tomino/toolbelt": "^1.0.4",
+    "deepmerge": "^3.1.0"
   }
 }
