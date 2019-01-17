@@ -30,22 +30,27 @@ Object {
 
 exports[`Dataset creates a root with object representation 1`] = `
 Schema {
+  "key": null,
   "parent": null,
   "properties": Object {
     "accountTotal": Schema {
       "default": "this.accounts.reduce((p, n) => n.money + p, 0)",
+      "key": "accountTotal",
       "parent": [Circular],
       "type": "expression",
     },
     "accounts": Schema {
       "items": Schema {
+        "key": "accounts",
         "parent": [Circular],
         "properties": Object {
           "money": Schema {
+            "key": "money",
             "parent": [Circular],
             "type": "number",
           },
           "number": Schema {
+            "key": "number",
             "parent": [Circular],
             "pattern": /\\\\d\\\\d\\\\d-\\\\d\\\\d\\\\d/,
             "required": true,
@@ -57,6 +62,7 @@ Schema {
         ],
         "type": "object",
       },
+      "key": "accounts",
       "maxItems": 3,
       "minItems": 1,
       "parent": [Circular],
@@ -64,15 +70,18 @@ Schema {
       "uniqueItems": true,
     },
     "address": Schema {
+      "key": "address",
       "parent": [Circular],
       "properties": Object {
         "number": Schema {
           "exclusiveMaximum": 1000,
           "exclusiveMinimum": 0,
+          "key": "number",
           "parent": [Circular],
           "type": "number",
         },
         "street": Schema {
+          "key": "street",
           "maxLength": 30,
           "minLength": 5,
           "parent": [Circular],
@@ -83,33 +92,39 @@ Schema {
     },
     "age": Schema {
       "default": 0,
+      "key": "age",
       "maximum": 130,
       "minimum": 0,
       "parent": [Circular],
       "type": "integer",
     },
     "dateMarried": Schema {
+      "key": "dateMarried",
       "parent": [Circular],
       "type": "date",
     },
     "fatherAge": Schema {
       "expression": "value > this.age + 18",
+      "key": "fatherAge",
       "parent": [Circular],
       "type": "integer",
       "validationMessage": "Father age must be at least 18 years more then your age",
     },
     "married": Schema {
       "default": false,
+      "key": "married",
       "parent": [Circular],
       "type": "boolean",
     },
     "name": Schema {
+      "key": "name",
       "parent": [Circular],
       "required": true,
       "type": "string",
     },
     "salary": Schema {
       "default": 300,
+      "key": "salary",
       "minimum": 0,
       "parent": [Circular],
       "type": "number",
