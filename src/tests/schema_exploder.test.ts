@@ -9,23 +9,35 @@ type Parent = {
   key: string;
 };
 
-function explode(
-  obj: JSONSchema,
-  parent: Parent = { node: obj, parent: null, key: null }
-): JSONSchema[] | JSONSchema {
-  let g = 0;
-  let items: JSONSchema[] = [obj];
-  let itemsToRemove: number[] = [];
+let idx = 0;
+function createParent(key: string, node: JSONSchema, parent: Parent) {
+  return {
+    idx: idx++,
+    node,
+    parent,
+    key
+  };
+}
+
+function addToArray(element: JSONSchema | JSONSchema[], array: JSONSchema[]) {
+  if (Array.isArray(element)) {
+    array.push(...element);
+  } else {
+    array.push(element);
+  }
+}
+
+function explode(obj: JSONSchema, parent: Parent = null, forceArray = false): JSONSchema[] {
+  if (!parent) {
+    parent = createParent(null, obj, null);
+  }
 
   // anyOf multiplies the schema
   if (obj.anyOf) {
-    let items: JSONSchema[] = [];
+    let anyOfItems: JSONSchema[] = [];
     let { anyOf, ...rest } = obj;
 
     for (let a of obj.anyOf) {
-      // console.log('Porcess');
-      // console.log(obj);
-
       // create clone of the current one withouth the anyOf property
       let c = clone(rest);
 
@@ -34,128 +46,115 @@ function explode(
 
       // expand on others
       let exploded = explode(merged);
-      if (Array.isArray(exploded)) {
-        // console.log(merged);
-        // console.log(exploded);
-        items.push(...exploded);
-      } else {
-        items.push(exploded);
-      }
+      addToArray(exploded, anyOfItems);
     }
-    return items;
+
+    return anyOfItems;
   }
 
   // all of merges schemas together
   if (obj.allOf) {
-    console.trace();
     let { allOf, ...rest } = obj;
-    let items: JSONSchema[] = [rest];
+    let allOfItems: JSONSchema[] = [];
 
     for (let allOfItem of obj.allOf) {
-      let exploded = explode(allOfItem);
-      let itemLength = items.length;
-      for (let i = 0; i < itemLength; i++) {
-        console.log(i);
+      let c = clone(rest);
 
-        if (g++ > 6) {
-          console.log('Errror');
-          break;
-        }
+      // merge with current and continue explosion expanding on other properties
+      let merged = merge(c, allOfItem);
+      let exploded = explode(merged, null, true); /*?*/
 
-        let current = items[i];
-        if (Array.isArray(exploded)) {
-          //   // items.push(...exploded);
-          for (let j = 0; j < exploded.length; j++) {
-            let c = clone(current);
-            //     // merge with current addition in anyOf
-            let merged = merge(c, exploded[j]); /*?*/
-
-            if (j === 0) {
-              items[i] = merged;
-            } else {
-              items.push(merged);
-            }
-            // console.log(items);
-          }
-        } else {
-          // merge with current
-
-          // merge with current addition in anyOf
-          console.log('Merging');
-          console.log(exploded);
-
-          items[i] = merge(current, exploded);
-          // items.push(exploded);
-        }
-      }
-    }
-    return items;
-  }
-
-  // clone all exploded properties
-  if (obj.type === 'object' && obj.properties) {
-    // for (let j=0;)
-    for (let key of Object.getOwnPropertyNames(obj.properties)) {
-      let explodedProperties = explode(obj.properties[key], { node: obj, parent, key });
-
-      if (Array.isArray(explodedProperties)) {
-        // we will clone the parent
-
-        let p = parent;
-        let root = parent.node;
-        let path: Parent[] = [];
-        while (p.parent) {
-          path.push(parent);
-          root = p.parent.node;
-          p = p.parent;
-        }
-
-        // remove root from collection
-        const i = items.indexOf(root);
-        items.splice(i, 1);
-
-        // now insert each cloned version to the correct property
-        for (let explodedProperty of explodedProperties) {
-          // clone the parent and find the way back down
-          let cloned: JSONSchema = clone(root);
-          let child = cloned;
-          let newParent: Parent = { node: cloned, key: null, parent: null };
-
-          for (let i = path.length - 1; i >= 0; i--) {
-            let top = path[i];
-            child = child.properties[top.key];
-            newParent = { node: child, key: top.key, parent: newParent };
-          }
-          child.properties[key] = explodedProperty;
-
-          // console.log('Pushing');
-          // console.log(explodedProperties);
-          // console.log(child);
-
-          let explodedClone = explode(child, { key, parent: newParent.parent, node: child });
-
-          if (Array.isArray(explodedClone)) {
-            items.push(...explodedClone);
-          } else {
-            items.push(explodedClone);
-          }
-        }
-
-        return items;
+      if (allOfItems.length === 0) {
+        addToArray(exploded, allOfItems);
       } else {
-        obj.properties[key] = explodedProperties;
+        // explosion multiplies all array elements
+        let multiplied = [];
+        for (let currentItem of allOfItems) {
+          for (let newItem of exploded as any) {
+            multiplied.push(merge(currentItem, newItem));
+          }
+        }
+        allOfItems = multiplied;
       }
     }
+    return allOfItems;
   }
 
-  return items.length > 1 ? items : items[0];
+  /* =========================================================
+      PROPERTIES
+     ======================================================== */
+
+  if (obj.type === 'object' && obj.properties) {
+    return processProperties(obj, parent);
+  }
+
+  return [obj];
 }
 
-// function showResult(obj) {
-//   console.log(JSON.stringify(obj, null, 2))
-// }
+function findParent(parent: Parent) {
+  let p = parent;
+  let root = parent.node;
+  let path: Parent[] = [];
+  while (p.parent) {
+    path.push(p);
+    root = p.parent.node;
+    p = p.parent;
+  }
 
-// console.log(JSON.stringify(explode(obj), null, 2));
+  return { root, path };
+}
+
+function findChild(root: any, path: Parent[]) {
+  let cloned: JSONSchema = clone(root);
+  let child = cloned;
+  let newParent: Parent = createParent(null, cloned, null);
+
+  for (let i = path.length - 1; i >= 0; i--) {
+    let top = path[i];
+    newParent = createParent(top.key, child, newParent);
+    child = child.properties[top.key];
+  }
+  return { newParent, child };
+}
+
+function processProperties(obj: any, parent: any) {
+  let items: JSONSchema[] = [obj];
+
+  // for (let j=0;)
+  for (let key of Object.getOwnPropertyNames(obj.properties)) {
+    // explode property, if the property is exploded return array with more then 1 item
+    // if this is the case we need to multiply the containing object by finding its root
+    // cloning it and assigning the new property where it
+    let explodedProperties = explode(obj.properties[key], createParent(key, obj, parent)); /*?*/
+
+    if (explodedProperties.length > 1) {
+      // find the root schema and remember the path
+      // from the path we can reconstruct the object
+      let { root, path } = findParent(parent); /*?.root*/
+
+      // remove root from collection
+      const i = items.indexOf(root);
+      items.splice(i, 1);
+
+      // now insert each cloned version to the correct property
+      for (let explodedProperty of explodedProperties) {
+        // clone the parent and find the way back down
+        // following the path, back to the current property
+        let { child, newParent } = findChild(root, path);
+
+        // override the property with current value
+        child.properties[key] = explodedProperty;
+
+        // continue processing other properties in case more of them have multipliers
+        items.push(...processProperties(child, newParent));
+      }
+      return items;
+    } else {
+      obj.properties[key] = explodedProperties[0];
+    }
+  }
+  return items;
+}
 
 describe('exploder', () => {
   function schema(): JSONSchema {
@@ -170,6 +169,57 @@ describe('exploder', () => {
     };
   }
 
+  it('explodes simple anyOf an a property', () => {
+    const s = schema();
+    s.anyOf = [{ required: ['first'] }, { required: ['second'] }];
+    s.properties.first.anyOf = [{ minimum: 0 }, { maximum: 1000 }];
+
+    const exploded = explode(s);
+
+    expect(exploded).toEqual([
+      {
+        properties: {
+          first: { minimum: 0, type: 'number' },
+          fourth: { type: 'number' },
+          second: { type: 'number' },
+          third: { type: 'number' }
+        },
+        required: ['first'],
+        type: 'object'
+      },
+      {
+        properties: {
+          first: { maximum: 1000, type: 'number' },
+          fourth: { type: 'number' },
+          second: { type: 'number' },
+          third: { type: 'number' }
+        },
+        required: ['first'],
+        type: 'object'
+      },
+      {
+        properties: {
+          first: { minimum: 0, type: 'number' },
+          fourth: { type: 'number' },
+          second: { type: 'number' },
+          third: { type: 'number' }
+        },
+        required: ['second'],
+        type: 'object'
+      },
+      {
+        properties: {
+          first: { maximum: 1000, type: 'number' },
+          fourth: { type: 'number' },
+          second: { type: 'number' },
+          third: { type: 'number' }
+        },
+        required: ['second'],
+        type: 'object'
+      }
+    ]);
+  });
+
   it('explodes simple anyOf', () => {
     const s = schema();
     s.anyOf = [{ required: ['first'] }, { required: ['second'] }];
@@ -180,7 +230,8 @@ describe('exploder', () => {
         properties: {
           first: { type: 'number' },
           second: { type: 'number' },
-          third: { type: 'number' }
+          third: { type: 'number' },
+          fourth: { type: 'number' }
         },
         required: ['first'],
         type: 'object'
@@ -189,7 +240,8 @@ describe('exploder', () => {
         properties: {
           first: { type: 'number' },
           second: { type: 'number' },
-          third: { type: 'number' }
+          third: { type: 'number' },
+          fourth: { type: 'number' }
         },
         required: ['second'],
         type: 'object'
@@ -211,7 +263,8 @@ describe('exploder', () => {
         properties: {
           first: { type: 'number' },
           second: { type: 'number' },
-          third: { type: 'number' }
+          third: { type: 'number' },
+          fourth: { type: 'number' }
         },
         required: ['first'],
         type: 'object'
@@ -220,7 +273,8 @@ describe('exploder', () => {
         properties: {
           first: { type: 'number' },
           second: { type: 'number' },
-          third: { type: 'number' }
+          third: { type: 'number' },
+          fourth: { type: 'number' }
         },
         required: ['third'],
         type: 'object'
@@ -229,7 +283,8 @@ describe('exploder', () => {
         properties: {
           first: { type: 'number' },
           second: { type: 'number' },
-          third: { type: 'number' }
+          third: { type: 'number' },
+          fourth: { type: 'number' }
         },
         required: ['second'],
         type: 'object'
@@ -284,6 +339,49 @@ describe('exploder', () => {
           third: { type: 'number' }
         },
         required: ['first', 'third', 'fourth'],
+        type: 'object'
+      }
+    ]);
+  });
+
+  it('explodes combined allOf an a property', () => {
+    const s = schema();
+    s.allOf = [
+      { required: ['first'] },
+      { required: ['second'] },
+      { anyOf: [{ required: ['third'] }, { required: ['fourth'] }] }
+    ];
+    s.properties.second.allOf = [{ minimum: 0 }, { maximum: 1000 }];
+
+    const exploded = explode(s);
+
+    expect(exploded).toEqual([
+      {
+        properties: {
+          first: { type: 'number' },
+          fourth: { type: 'number' },
+          second: {
+            maximum: 1000,
+            minimum: 0,
+            type: 'number'
+          },
+          third: { type: 'number' }
+        },
+        required: ['first', 'second', 'third'],
+        type: 'object'
+      },
+      {
+        properties: {
+          first: { type: 'number' },
+          fourth: { type: 'number' },
+          second: {
+            maximum: 1000,
+            minimum: 0,
+            type: 'number'
+          },
+          third: { type: 'number' }
+        },
+        required: ['first', 'second', 'fourth'],
         type: 'object'
       }
     ]);
@@ -349,6 +447,7 @@ describe('exploder', () => {
     // ];
     s.properties.first.anyOf = [{ minimum: 2 }, { maximum: 10 }];
     s.properties.third.allOf = [{ minimum: 0 }, { maximum: 1 }];
+
     const exploded = explode(s);
 
     expect(exploded).toEqual([
@@ -373,7 +472,7 @@ describe('exploder', () => {
     ]);
   });
 
-  fit('explodes deep properties', () => {
+  it('explodes deep properties', () => {
     const s: JSONSchema = {
       type: 'object',
       properties: {
@@ -388,6 +487,10 @@ describe('exploder', () => {
                   anyOf: [{ minimum: 2 }, { maximum: 2 }]
                 }
               }
+            },
+            fourth: {
+              type: 'number',
+              anyOf: [{ minimum: 2, maximum: 3 }, { minimum: 0 }, { maximum: 1000 }]
             }
           }
         }
@@ -399,19 +502,73 @@ describe('exploder', () => {
     expect(exploded).toEqual([
       {
         properties: {
-          first: { minimum: 2, type: 'number' },
-          fourth: { type: 'number' },
-          second: { type: 'number' },
-          third: { maximum: 1, minimum: 0, type: 'number' }
+          first: {
+            properties: {
+              fourth: { maximum: 3, minimum: 2, type: 'number' },
+              second: { properties: { third: { minimum: 2, type: 'number' } }, type: 'object' }
+            },
+            type: 'object'
+          }
         },
         type: 'object'
       },
       {
         properties: {
-          first: { maximum: 10, type: 'number' },
-          fourth: { type: 'number' },
-          second: { type: 'number' },
-          third: { maximum: 1, minimum: 0, type: 'number' }
+          first: {
+            properties: {
+              fourth: { minimum: 0, type: 'number' },
+              second: { properties: { third: { minimum: 2, type: 'number' } }, type: 'object' }
+            },
+            type: 'object'
+          }
+        },
+        type: 'object'
+      },
+      {
+        properties: {
+          first: {
+            properties: {
+              fourth: { maximum: 1000, type: 'number' },
+              second: { properties: { third: { minimum: 2, type: 'number' } }, type: 'object' }
+            },
+            type: 'object'
+          }
+        },
+        type: 'object'
+      },
+      {
+        properties: {
+          first: {
+            properties: {
+              fourth: { maximum: 3, minimum: 2, type: 'number' },
+              second: { properties: { third: { maximum: 2, type: 'number' } }, type: 'object' }
+            },
+            type: 'object'
+          }
+        },
+        type: 'object'
+      },
+      {
+        properties: {
+          first: {
+            properties: {
+              fourth: { minimum: 0, type: 'number' },
+              second: { properties: { third: { maximum: 2, type: 'number' } }, type: 'object' }
+            },
+            type: 'object'
+          }
+        },
+        type: 'object'
+      },
+      {
+        properties: {
+          first: {
+            properties: {
+              fourth: { maximum: 1000, type: 'number' },
+              second: { properties: { third: { maximum: 2, type: 'number' } }, type: 'object' }
+            },
+            type: 'object'
+          }
         },
         type: 'object'
       }

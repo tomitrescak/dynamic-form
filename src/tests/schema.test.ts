@@ -259,7 +259,7 @@ describe('Schema', () => {
       });
     });
 
-    fit('validates allOf value', () => {
+    it('validates allOf value', () => {
       // ====================================
       // if all are false it is an error
       // one value
