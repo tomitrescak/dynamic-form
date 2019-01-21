@@ -191,8 +191,8 @@ describe('Preview', () => {
             type: 'number'
           },
           formula: {
-            type: 'expression',
-            default: 'this.input + 4'
+            type: 'string',
+            expression: 'this.input + 4'
           },
           text: {
             type: 'string'

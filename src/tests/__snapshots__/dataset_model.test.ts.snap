@@ -2,142 +2,31 @@
 
 exports[`Dataset creates a default value 1`] = `
 Object {
-  "accounts": Array [
-    Object {
-      "money": undefined,
-      "number": undefined,
-    },
-  ],
-  "address": Object {
-    "number": undefined,
-    "street": undefined,
-  },
   "age": 0,
-  "dateMarried": undefined,
-  "fatherAge": undefined,
   "married": false,
-  "name": undefined,
   "salary": 300,
 }
 `;
 
-exports[`Dataset creates a default value 2`] = `
-Object {
-  "money": undefined,
-  "number": undefined,
-}
-`;
-
-exports[`Dataset creates a root with object representation 1`] = `
-Schema {
-  "key": null,
-  "parent": null,
-  "properties": Object {
-    "accountTotal": Schema {
-      "default": "this.accounts.reduce((p, n) => n.money + p, 0)",
-      "key": "accountTotal",
-      "parent": [Circular],
-      "type": "expression",
-    },
-    "accounts": Schema {
-      "items": Schema {
-        "key": "accounts",
-        "parent": [Circular],
-        "properties": Object {
-          "money": Schema {
-            "key": "money",
-            "parent": [Circular],
-            "type": "number",
-          },
-          "number": Schema {
-            "key": "number",
-            "parent": [Circular],
-            "pattern": /\\\\d\\\\d\\\\d-\\\\d\\\\d\\\\d/,
-            "required": true,
-            "type": "string",
-          },
-        },
-        "required": Array [
-          "number",
-        ],
-        "type": "object",
-      },
-      "key": "accounts",
-      "maxItems": 3,
-      "minItems": 1,
-      "parent": [Circular],
-      "type": "array",
-      "uniqueItems": true,
-    },
-    "address": Schema {
-      "key": "address",
-      "parent": [Circular],
-      "properties": Object {
-        "number": Schema {
-          "exclusiveMaximum": 1000,
-          "exclusiveMinimum": 0,
-          "key": "number",
-          "parent": [Circular],
-          "type": "number",
-        },
-        "street": Schema {
-          "key": "street",
-          "maxLength": 30,
-          "minLength": 5,
-          "parent": [Circular],
-          "type": "string",
-        },
-      },
-      "type": "object",
-    },
-    "age": Schema {
-      "default": 0,
-      "key": "age",
-      "maximum": 130,
-      "minimum": 0,
-      "parent": [Circular],
-      "type": "integer",
-    },
-    "dateMarried": Schema {
-      "key": "dateMarried",
-      "parent": [Circular],
-      "type": "date",
-    },
-    "fatherAge": Schema {
-      "expression": "value > this.age + 18",
-      "key": "fatherAge",
-      "parent": [Circular],
-      "type": "integer",
-      "validationMessage": "Father age must be at least 18 years more then your age",
-    },
-    "married": Schema {
-      "default": false,
-      "key": "married",
-      "parent": [Circular],
-      "type": "boolean",
-    },
-    "name": Schema {
-      "key": "name",
-      "parent": [Circular],
-      "required": true,
-      "type": "string",
-    },
-    "salary": Schema {
-      "default": 300,
-      "key": "salary",
-      "minimum": 0,
-      "parent": [Circular],
-      "type": "number",
-    },
-  },
-  "required": Array [
-    "name",
-  ],
-  "type": "object",
-}
-`;
+exports[`Dataset creates a default value 2`] = `Object {}`;
 
 exports[`Dataset creates mst with default values 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset creates mst with default values 2`] = `
 Object {
   "accounts": Array [],
   "address": Object {
@@ -166,10 +55,250 @@ Object {
     "street": "Elm street",
   },
   "age": 50,
-  "dateMarried": 2017-02-02T00:00:00.000Z,
+  "dateMarried": "2017-02-02T00:00:00.000Z",
   "fatherAge": 20,
   "married": true,
   "name": "Tomas",
   "salary": 2300.34,
+}
+`;
+
+exports[`Dataset validates  1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validates s 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validates th 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validates the  1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validates the  dataset 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validates the d 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validates the da 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validates the datas 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validates the dataset 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validates the r dataset 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validates the root dataset 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validatess 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset validats 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset valids 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
+}
+`;
+
+exports[`Dataset vs 1`] = `
+Object {
+  "accounts": Array [],
+  "address": Object {
+    "number": "",
+    "street": "",
+  },
+  "age": "",
+  "dateMarried": "",
+  "fatherAge": "",
+  "married": "",
+  "name": "",
+  "salary": 300,
 }
 `;

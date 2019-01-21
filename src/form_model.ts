@@ -1,3 +1,5 @@
+import Ajv from 'ajv';
+
 import { Schema } from './data_schema_model';
 import { DataSet, ValidationResult } from './form_store';
 import { buildStore } from './mst_builder';
@@ -64,8 +66,11 @@ export class FormModel {
     return textPreview.render(this, this.dataSet);
   }
 
-  validateWithReport(root: IFormElementOwner = this, owner = this.dataSet): string[] {
-    return owner.validateAll();
+  validateWithReport(
+    root: IFormElementOwner = this,
+    owner = this.dataSet
+  ): boolean | Ajv.ErrorObject[] {
+    return owner.validateDataset();
   }
 
   // validateWithReport(root: IFormElementOwner = this, owner = this.dataSet): ValidationResult {

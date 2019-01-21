@@ -1,4 +1,4 @@
-import { autorun } from 'mobx';
+import { autorun, toJS } from 'mobx';
 
 import { Schema } from '../data_schema_model';
 import { buildStore } from '../mst_builder';
@@ -6,9 +6,10 @@ import { create } from './data';
 import { JSONSchema } from '../json_schema';
 
 import { config } from '../config';
+import { safeEval } from '../form_utils';
 
 describe('Dataset', () => {
-  let jsonSchema: JSONSchema = {
+  let jsonSchema = (): JSONSchema => ({
     type: 'object',
     properties: {
       name: {
@@ -34,11 +35,12 @@ describe('Dataset', () => {
       },
       fatherAge: {
         type: 'integer',
-        expression: 'value > this.age + 18',
+        validationExpression: 'value > this.age + 18',
         validationMessage: 'Father age must be at least 18 years more then your age'
       },
       accounts: {
         type: 'array',
+        uniqueItems: true,
         items: {
           type: 'object',
           properties: {
@@ -47,18 +49,20 @@ describe('Dataset', () => {
               pattern: '\\d\\d\\d-\\d\\d\\d'
             },
             money: {
-              type: 'number'
+              type: 'number',
+              validationExpression: 'this.money % 2 === 0', // allow only to add higher value,
+              validationMessage: 'You can only put even value of money!'
             }
           },
           required: ['number']
         },
-        uniqueItems: true,
+
         minItems: 1,
         maxItems: 3
       },
       accountTotal: {
-        type: 'expression',
-        default: 'this.accounts.reduce((p, n) => n.money + p, 0)'
+        type: 'number',
+        expression: 'this.accounts.reduce((p, n) => n.money + p, 0)'
       },
       address: {
         type: 'object',
@@ -77,36 +81,9 @@ describe('Dataset', () => {
       }
     },
     required: ['name']
-  };
-
-  let schema = new Schema(jsonSchema);
-
-  it('creates a root with object representation', () => {
-    expect(schema).toMatchSnapshot();
   });
 
-  it('validates value', () => {
-    /* 
-    {
-      name: 'Tomas', // required
-      age: 10, // min 0, max 130
-      salary: 120.45, // min 0
-      married: true,
-      dateMarried: Date,
-      fatherAge: 20 //  > age + 18
-      accounts: [{ number: '111-222' }] // min 1, max 3 elements, format XXX-XXX
-      accountTotal: ... // total, should not be in the final set
-      address: {
-        street: 'AAA' // minLength 5, maxLength: 30
-        number: 555 // min 1, max 999
-      }
-    } 
-    */
-
-    // expression
-
-    expect(schema.properties.age.validateValue(10)).toBeUndefined();
-  });
+  let schema = new Schema(jsonSchema());
 
   it('creates a default value', () => {
     expect(schema.defaultValue()).toMatchSnapshot();
@@ -114,7 +91,7 @@ describe('Dataset', () => {
     expect(schema.properties.accounts.items.defaultValue()).toMatchSnapshot();
   });
 
-  it.only('creates a new mst and validates values', () => {
+  it('creates a new mst and validates values', () => {
     config.setDirty = jest.fn();
 
     const mst = buildStore(schema);
@@ -128,117 +105,118 @@ describe('Dataset', () => {
 
     // ok
 
-    // data.setValue('age', '30');
-    // expect(data.getValue('age')).toEqual(30);
+    data.setValue('age', '30');
+    expect(data.getValue('age')).toEqual(30);
 
-    // data.setValue('salary', '30.15');
-    // expect(data.getValue('salary')).toEqual(30.15);
+    data.setValue('salary', '30.15');
+    expect(data.getValue('salary')).toEqual(30.15);
 
-    // data.setValue('salary', '30');
-    // expect(data.getValue('salary')).toEqual(30);
+    data.setValue('salary', '30');
+    expect(data.getValue('salary')).toEqual(30);
 
     // // format
 
-    // data.setValue('age', '30.15');
-    // expect(data.getValue('age')).toEqual('30.15');
-    // expect(data.validateValue('age')).toBe('Expected integer value');
+    data.setValue('age', '30.15');
+    expect(data.getValue('age')).toEqual('30.15');
+    expect(data.validateField('age')).toBe('should be integer');
 
-    // data.setValue('age', 'Momo');
-    // expect(data.getValue('age')).toEqual('Momo');
-    // expect(data.validateValue('age')).toBe('Expected integer value');
+    data.setValue('age', 'Momo');
+    expect(data.getValue('age')).toEqual('Momo');
+    expect(data.validateField('age')).toBe('should be integer');
 
-    // data.setValue('salary', '30.aa');
-    // expect(data.getValue('salary')).toEqual('30.aa');
-    // expect(data.validateValue('salary')).toBe('Expected decimal value');
+    data.setValue('salary', '30.aa');
+    expect(data.getValue('salary')).toEqual('30.aa');
+    expect(data.validateField('salary')).toBe('should be number');
 
-    // // minimum
+    // minimum
 
-    // data.setValue('age', '0');
-    // expect(data.getValue('age')).toEqual(0);
+    data.setValue('age', '0');
+    expect(data.getValue('age')).toEqual(0);
 
-    // data.setValue('age', '-1');
-    // expect(data.getValue('age')).toEqual('-1');
-    // expect(data.validateValue('age')).toBe('Value has to be higher or equal than 0');
+    data.setValue('age', '-1');
+    expect(data.getValue('age')).toEqual(-1);
+    expect(data.validateField('age')).toBe('should be >= 0');
 
     // // maximum
 
-    // data.setValue('age', '130');
-    // expect(data.getValue('age')).toEqual(130);
+    data.setValue('age', '130');
+    expect(data.getValue('age')).toEqual(130);
 
-    // data.setValue('age', '131');
-    // expect(data.getValue('age')).toEqual('131');
-    // expect(data.validateValue('age')).toBe('Value has to be lower or equal than 130');
+    data.setValue('age', '131');
+    expect(data.getValue('age')).toEqual(131);
+    expect(data.validateField('age')).toBe('should be <= 130');
 
-    // // subselection ok 'a.b.c'
+    // subselection ok 'a.b.c'
 
-    // data.setValue('address.number', '20');
-    // expect(data.getValue('address.number')).toEqual(20);
+    data.setValue('address.number', '20');
+    expect(data.getValue('address.number')).toEqual(20);
 
-    // // exclusive minimum
+    // exclusive minimum
 
-    // data.setValue('address.number', '0');
-    // expect(data.getValue('address.number')).toEqual('0');
-    // expect(data.getValue('address').validateValue('number')).toBe('Value has to be higher than 0');
+    data.setValue('address.number', '0');
+    expect(data.getValue('address.number')).toEqual(0);
+    expect(data.getValue('address').validateField('number')).toBe('should be > 0');
 
-    // data.setValue('address.number', '1');
-    // expect(data.getValue('address.number')).toEqual(1);
+    data.setValue('address.number', '1');
+    expect(data.getValue('address.number')).toEqual(1);
 
-    // // exclusive maximum
+    // exclusive maximum
 
-    // data.setValue('address.number', '1000');
-    // expect(data.getValue('address.number')).toEqual('1000');
-    // expect(data.getValue('address').validateValue('number', '1000')).toBe(
-    //   'Value has to be lower than 1000'
-    // );
+    data.setValue('address.number', '1000');
+    expect(data.getValue('address.number')).toEqual(1000);
+    expect(data.getValue('address').validateField('number', '1000')).toBe('should be < 1000');
 
-    // data.setValue('address.number', '999');
-    // expect(data.getValue('address.number')).toEqual(999);
+    data.setValue('address.number', '999');
+    expect(data.getValue('address.number')).toEqual(999);
 
-    // /* =========================================================
-    //     String
-    //    ======================================================== */
+    /* =========================================================
+        String
+       ======================================================== */
 
-    // // ok
+    // ok
 
-    // data.setValue('name', 'Bobo');
-    // expect(data.getValue('name')).toEqual('Bobo');
+    data.setValue('name', 'Bobo');
+    expect(data.getValue('name')).toEqual('Bobo');
 
-    // // format ok
+    // format ok
 
     data.addRow('accounts');
-    // data.getValue('accounts')[0].setValue('number', '234-234');
+    data.getValue('accounts')[0].setValue('number', '234-234');
 
-    // expect(data.getValue('accounts')[0].number).toEqual('234-234');
+    // console.log(3);
+    // console.log(data.getValue('accounts')[0]);
 
-    // error = data.getValue('accounts')[0].validateValue('number', '123-123');
-    // expect(error).toBeUndefined();
+    expect(data.getValue('accounts')[0].number).toEqual('234-234');
+
+    error = data.getValue('accounts')[0].validateField('number', '123-123');
+    expect(error).toBeUndefined();
 
     // format error
 
     data.getValue('accounts')[0].setValue('number', '123d');
     expect(data.getValue('accounts')[0].number).toEqual('123d');
-    error = data.getValue('accounts')[0].validateValue('number');
-    expect(error).toEqual('Incorrect format');
+    error = data.getValue('accounts')[0].validateField('number');
+    expect(error).toEqual('should match pattern "\\d\\d\\d-\\d\\d\\d"');
 
     data.getValue('accounts')[0].setValue('number', '');
-    error = data.getValue('accounts')[0].validateValue('number', '');
+    error = data.getValue('accounts')[0].validateField('number', '');
     expect(error).toEqual('Value is required');
 
     // minLength
 
     data.getValue('address').setValue('street', '123456');
-    error = data.getValue('address').validateValue('street', '123456');
+    error = data.getValue('address').validateField('street', '123456');
     expect(error).toBeUndefined();
 
     data.getValue('address').setValue('street', '123');
-    error = data.getValue('address').validateValue('street');
-    expect(error).toEqual('Too short. Has to contain at least 5 characters');
+    error = data.getValue('address').validateField('street');
+    expect(error).toEqual('should NOT be shorter than 5 characters');
 
     // maxLength
 
     data.getValue('address').setValue('street', '1234567890123456789012345678901234567890');
-    error = data.getValue('address').validateValue('street');
-    expect(error).toEqual('Too long. Has to contain maximum 30 characters');
+    error = data.getValue('address').validateField('street');
+    expect(error).toEqual('should NOT be longer than 30 characters');
 
     /* =========================================================
         Array
@@ -247,8 +225,8 @@ describe('Dataset', () => {
     // min intems
 
     data.removeRow('accounts', 0);
-    error = data.validate('accounts');
-    expect(error).toEqual('Collection has to contain at least 1 item');
+    error = data.validateField('accounts');
+    expect(error).toEqual('should NOT have fewer than 1 items');
 
     // max items
 
@@ -257,27 +235,30 @@ describe('Dataset', () => {
     data.addRow('accounts');
     data.addRow('accounts');
 
-    error = data.validate('accounts');
-    expect(error).toEqual('Collection has to contain maximum 3 items');
+    error = data.validateField('accounts');
+    expect(error).toEqual('should NOT have more than 3 items');
 
     data.removeRow('accounts', 3);
 
     // unique items
 
-    error = data.validate('accounts');
-    expect(error).toBe('Collection needs to contain unique items. Items [1, 2, 3] are repetitive');
+    // console.log(toJS(data.getValue('accounts')));
+    // console.log(data.getValue('accounts'))
+
+    error = data.validateField('accounts');
+    expect(error).toBe('should NOT have duplicate items (items ## 1 and 2 are identical)');
 
     data.getValue('accounts')[1].setValue('number', '123-234');
 
-    error = data.validate('accounts');
-    expect(error).toBe('Collection needs to contain unique items. Items [1, 3] are repetitive');
+    error = data.validateField('accounts');
+    expect(error).toBe('should NOT have duplicate items (items ## 0 and 2 are identical)');
 
     // all is well
 
     data.getValue('accounts')[0].setValue('number', '123-456');
     data.getValue('accounts')[2].setValue('number', '456-789');
 
-    error = data.validate('accounts');
+    error = data.validateField('accounts');
     expect(error).toBeUndefined();
 
     // unique items
@@ -293,15 +274,28 @@ describe('Dataset', () => {
     // failing expression
 
     data.setValue('fatherAge', '20');
-    expect(data.getValue('fatherAge')).toEqual('20');
+    expect(data.getValue('fatherAge')).toEqual(20);
 
-    error = data.validateValue('fatherAge');
+    // console.log('WILL VALIDATE FATHER AGE');
+    // console.log(data.fatherAge);
+
+    error = data.validateField('fatherAge');
     expect(error).toBe('Father age must be at least 18 years more then your age');
 
-    data.getSchema('fatherAge').validationMessage = null;
+    data.setValue('fatherAge', '80');
+    expect(data.getValue('fatherAge')).toEqual(80);
+    error = data.validateField('fatherAge');
+    expect(error).toBeUndefined();
 
-    error = data.validateValue('fatherAge');
-    expect(error).toBe('Unexpected value');
+    data.getValue('accounts')[0].setValue('money', 10);
+    data.getValue('accounts')[0].setValue('money', 5);
+    error = data.getValue('accounts')[0].validateField('money');
+    expect(error).toEqual('You can only put even value of money!');
+    expect(data.getValue('accounts')[0].errors.get('money')).toBe(
+      'You can only put even value of money!'
+    );
+
+    data.getSchema('fatherAge').validationMessage = null;
   });
 
   it('creates mst with values', () => {
@@ -311,7 +305,7 @@ describe('Dataset', () => {
       name: 'Tomas',
       fatherAge: 20,
       married: true,
-      dateMarried: create.date(),
+      dateMarried: create.date().toISOString(),
       salary: 2300.34,
       address: {
         street: 'Elm street',
@@ -329,7 +323,18 @@ describe('Dataset', () => {
   it('creates mst with default values', () => {
     const mst = buildStore(schema);
     const defaultData = mst.create({});
-    expect(defaultData.toJS()).toMatchSnapshot();
+    expect(defaultData.toJS(false)).toMatchSnapshot();
+  });
+
+  it('validates the root dataset', () => {
+    const jSchema = jsonSchema();
+    jSchema.oneOf = [{ required: ['name'] }, { required: ['age'] }];
+    const rSchema = new Schema(jSchema);
+
+    const store = buildStore(rSchema);
+    const d1 = store.create({ name: 'Tomas', age: 39 });
+    const errors = d1.validateDataset(); /*?*/
+    expect(d1.errors.get('ROOT')).toEqual('should match exactly one schema in oneOf');
   });
 
   it('allows to use expressions', () => {

@@ -71,11 +71,15 @@ export function buildStore(schema: Schema) {
 
     for (let key of properties) {
       let node = schema.properties[key];
+
+      // console.log(key + ' ' + node.expression);
+      // console.log(node.schema);
+
       // expressions do not need state tree entry they are evaluated automatically
-      if (node.type === 'expression') {
+      if (node.expression) {
         (view as any).__defineGetter__(key, function() {
           // @ts-ignore
-          return safeEval(this, node.default);
+          return safeEval(this, node.expression);
         });
       }
     }
@@ -89,6 +93,9 @@ export function buildStore(schema: Schema) {
 
   for (let key of properties) {
     let node = schema.properties[key];
+    if (node.expression) {
+      continue;
+    }
     let definition = mstTypeFactory(node);
     if (definition) {
       mstDefinition[key] = types.maybe(definition);

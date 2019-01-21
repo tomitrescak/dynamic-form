@@ -1,11 +1,55 @@
 import * as validations from './validation';
 
-import * as ajv from 'ajv';
+// @ts-ignore
+import initCustomErrors from 'ajv-errors';
+import Ajv from 'ajv';
 
-import { plural, safeEval } from './form_utils';
+import { getRoot, getPath, IAnyStateTreeNode } from 'mobx-state-tree';
+
 import { JSONSchemaType, JSONSchema } from './json_schema';
-import { config } from './config';
-import { expandSchemas } from './schema_exploder';
+import { safeEval } from './form_utils';
+import { DataSet } from './form_store';
+
+const defaultAjv = new Ajv({ allErrors: true, useDefaults: true });
+// initCustomErrors(defaultAjv);
+
+defaultAjv.addKeyword('validationExpression', {
+  // type: 'string',]
+  errors: true,
+  validate: function v(
+    this: any,
+    schema: any,
+    data: any,
+    elementSchema: JSONSchema,
+    elementPath: string,
+    parentData: any
+  ) {
+    // console.log(arguments);
+    // console.log(parentData);
+    // console.log(schema);
+    // console.log(data);
+    // console.log(safeEval(parentData, schema, data));
+    // console.log(elementPath);
+
+    const result = safeEval(parentData, schema, data);
+    if (!result) {
+      // console.log(`Validation Error "${elementSchema.validationMessage}" at: ` + elementPath);
+
+      (v as any).errors = [];
+      (v as any).errors.push({
+        keyword: 'validationExpression',
+        dataPath: elementPath,
+        message: elementSchema.validationMessage
+          ? elementSchema.validationMessage
+          : 'Value is invalid',
+        params: {
+          keyword: 'validationExpression'
+        }
+      });
+    }
+    return result;
+  }
+});
 
 export type ListItem = {
   text: string;
@@ -16,76 +60,47 @@ type SchemaOptions = {
   parent?: Schema;
   required?: boolean;
   key?: string;
-  createCombinations?: boolean;
+  ajv?: Ajv.Ajv;
 };
 
 export class Schema {
   // store: typeof FormStore.Type;
   parent: Schema;
-
   properties: { [index: string]: Schema };
   items: Schema;
   type: JSONSchemaType;
-  minimum: number;
-  maximum: number;
-  exclusiveMinimum: number;
-  exclusiveMaximum: number;
-  minLength: number;
-  maxLength: number;
-  minItems: number;
-  maxItems: number;
-  uniqueItems: boolean;
-  pattern: RegExp;
   default: any;
   required: boolean;
   readOnly: boolean;
-  expression: string;
   validationMessage: string;
+  expression: string;
   enum: ListItem[];
   key: string;
-  combinations: Schema[];
+  schema: JSONSchema;
+
+  validator: Ajv.ValidateFunction;
+  ajv: Ajv.Ajv;
 
   constructor(
     schema: JSONSchema,
-    { parent = null, required = false, key = null, createCombinations = true }: SchemaOptions = {}
+    { parent = null, required = false, key = null, ajv = defaultAjv }: SchemaOptions = {}
   ) {
-    if (createCombinations) {
-      // create all possible combinations of this schems
-      let { schemas, exploded } = expandSchemas(schema);
-
-      if (exploded) {
-        this.combinations = schemas.map(s => new Schema(s, { createCombinations: false }));
-      }
-    }
-
     this.parent = parent;
+    this.schema = schema;
+    this.expression = schema.expression;
     this.key = key;
 
-    this.init(schema, [
-      'readOnly',
-      'type',
-      'required',
-      'default',
-      'minimum',
-      'maximum',
-      'exclusiveMaximum',
-      'exclusiveMinimum',
-      'minLength',
-      'maxLength',
-      'uniqueItems',
-      'minItems',
-      'maxItems',
-      'expression',
-      'validationMessage',
-      'enum'
-    ]);
+    // we do not need validator for end nodes
+    // these are always validated from the parent
+    if (schema.properties) {
+      this.ajv = ajv;
+      this.validator = this.ajv.compile(schema);
+    }
+
+    this.init(schema, ['readOnly', 'type', 'required', 'default', 'validationMessage', 'enum']);
 
     if (required) {
       this.required = required;
-    }
-
-    if (schema.pattern != null) {
-      this.pattern = schema.pattern ? new RegExp(schema.pattern) : null;
     }
 
     if (schema.type === 'object') {
@@ -94,8 +109,7 @@ export class Schema {
         this.properties[key] = new Schema(schema.properties[key] as JSONSchema, {
           parent: this,
           required: schema.required && schema.required.includes(key),
-          key,
-          createCombinations: false
+          key
         });
       }
     }
@@ -103,6 +117,14 @@ export class Schema {
     if (schema.type === 'array') {
       this.items = new Schema(schema.items as JSONSchema, this);
     }
+  }
+
+  rootSchema() {
+    let s: Schema = this;
+    while (s.parent != null) {
+      s = s.parent;
+    }
+    return s;
   }
 
   // randomValue() {
@@ -129,208 +151,128 @@ export class Schema {
     }
   }
 
-  defaultValue(): any {
-    const value: { [index: string]: any } = {};
-
-    if (this.type === 'array') {
-      let result = [];
-      for (let i = 0; i < this.minItems || 0; i++) {
-        result.push(this.items.defaultValue());
-      }
-      return result;
-    }
-
-    for (let key of Object.getOwnPropertyNames(this.properties)) {
-      let obj = this.properties[key];
-      if (obj.type === 'object' || obj.type === 'array') {
-        value[key] = this.properties[key].defaultValue();
-      } else if (obj.type !== 'expression') {
-        value[key] = this.properties[key].default;
-      }
-    }
-
-    return value;
-  }
-
-  parse(value: any) {
-    switch (this.type) {
-      case 'date':
-        return new Date(value);
-      case 'integer':
-        return parseInt(value, 10);
-      case 'number':
-        return parseFloat(value);
-      case 'boolean':
-        return value === true || value === 'true' || value === 'True';
-      default:
-        return value;
-    }
+  defaultValue<T>(dataset: T = {} as T): T {
+    // validator is set to assign default values
+    this.validator(dataset);
+    return dataset;
   }
 
   /* =========================================================
       Validations
      ======================================================== */
 
-  validateDataset(dataset: any) {
-    if (this.combinations) {
-      let results = [];
-      // we browse all combinations and fid a first passing one
-      for (let combination of this.combinations) {
-        let result = combination.validateSingle(dataset);
-        if (!result) {
-          return undefined; // first pass is all we need
-        }
-        results.push(result);
-      }
-      return results.length > 1 ? results : results[0];
-    }
+  static convertPath(path: string) {
+    path = path.replace(/\/(\d+)/g, '[$1]');
+    path = path.replace(/\//g, '.');
 
-    return this.validateSingle(dataset);
+    return path;
   }
 
-  validateSingle(dataset: any) {
-    let result: any = {};
-
-    if (this.properties) {
-      for (let key of Object.getOwnPropertyNames(this.properties)) {
-        let property = this.properties[key];
-
-        if (property.type === 'object') {
-          let res = property.validateSingle(dataset[key]);
-          if (res) {
-            result[key] = res;
-          }
-        } else if (property.type === 'array') {
-          result[key] = [];
-          for (let item of dataset[key]) {
-            result[key].push(property.items.validateSingle(item));
-          }
-        } else {
-          // console.log(dataset);
-
-          let res: any = dataset && property.validateValue(dataset[key], dataset);
-          if (res) {
-            result[key] = res;
-          }
-          // console.log(key);
-          // console.log(res);
-          // console.log(result);
-        }
+  static reassignErrors(errors: any[]) {
+    if (!Array.isArray(errors)) {
+      return errors;
+    }
+    for (let error of errors) {
+      // missing properties are propagated into properties themselves
+      // rendering as "value is required"
+      if (error.params && error.params.missingProperty) {
+        error.dataPath += '.' + error.params.missingProperty;
+        error.message = 'Value is required';
       }
     }
-
-    return Object.getOwnPropertyNames(result).length === 0 ? undefined : result;
-    // return result;
+    return errors;
   }
 
-  validateValue(value: any, datasetRoot: any = null): string {
-    console.log('Validating: ');
-    const { parent, ...rest } = this;
-    console.log(rest);
+  static parseParent(dataPath: string) {
+    if (dataPath.indexOf('.') >= 0) {
+      return {
+        dataPath: dataPath.substring(0, dataPath.lastIndexOf('.')),
+        property: dataPath.substring(dataPath.lastIndexOf('.') + 1)
+      };
+    }
+    return { property: dataPath, dataPath: '' };
+  }
 
-    // expression
-    let parsed = value != null && value !== '' ? this.parse(value) : value;
-    if (this.expression && !safeEval(datasetRoot, this.expression, parsed)) {
-      return this.validationMessage || 'Unexpected value';
+  tryParse(value: any) {
+    switch (this.type) {
+      case 'date':
+        let date = Date.parse(value);
+        return isNaN(date) ? value : new Date(date);
+      case 'integer':
+        return validations.IntValidator(value) ? value : parseInt(value, 10);
+      case 'number':
+        return validations.FloatValidator(value) ? value : parseFloat(value);
+      case 'boolean':
+        return value === true || value === 'true' || value === 'True'
+          ? true
+          : !value || value === false || value === 'false' || value === 'False'
+          ? false
+          : value;
+      default:
+        return value;
+    }
+  }
+
+  assignErrors(dataset: DataSet, error: Ajv.ErrorObject) {
+    let { property, dataPath } = Schema.parseParent(error.dataPath);
+    const node = eval(`dataset${dataPath}`);
+
+    if (!property) {
+      property = 'ROOT';
     }
 
-    // console.log(this.key + ': ' + this.required);
+    if (!node.errors.get(property)) {
+      node.errors.set(property, error.message);
+    }
+  }
 
-    if (this.required && (value == null || value === '' || value === false)) {
-      return this.validationMessage || config.i18n`Value is required`;
-    }
+  validate(dataset: DataSet) {
+    const cleanData = dataset.toJS ? dataset.toJS() : dataset;
+    // console.log(cleanData);
 
-    // types
-    if (this.type === 'integer') {
-      return this.isValid(validations.IntValidator(value) || this.numberValidations(value));
-    }
-    if (this.type === 'number') {
-      return this.isValid(validations.FloatValidator(value) || this.numberValidations(value));
-    }
-    if (this.type === 'string') {
-      return this.isValid(this.stringValidations(value));
-    }
-    if (this.type === 'array') {
-      return this.isValid(this.arrayValidations(value));
-    }
+    // we use this when executing expressions
+    // (this.ajv as any).currentData = cleanData;
 
+    if (!this.validator(cleanData) as any) {
+      return Schema.reassignErrors(this.validator.errors);
+    }
+    return false;
+  }
+
+  validateAndAssignErrors(dataset: DataSet) {
+    const cleanData = dataset.toJS();
+    const errors = this.validate(cleanData);
+    if (errors && errors.length) {
+      for (let error of errors) {
+        this.assignErrors(dataset, error);
+      }
+    }
+    return errors;
+  }
+
+  validateField(value: IAnyStateTreeNode, key: string, assignErrors = false) {
+    // mobx's 'getPath' generates path such as /prop/path/0
+    // we need to convert it to the json schema type path such as.prop.path[0]
+    const path = Schema.convertPath(getPath(value)) + (key ? '.' + key : '');
+    // console.log('Validating: ' + path);
+
+    // validate the whole dataset from its root
+    const root: DataSet = getRoot(value);
+    const errors = this.validate(root as DataSet);
+
+    // console.log(root.fatherAge)
+    // console.log(errors);
+
+    // locate the error in the resulting errors by its path
+    if (errors && errors.length) {
+      const error = errors.find(e => e.dataPath === path);
+      if (error) {
+        if (assignErrors) {
+          this.assignErrors(root, error);
+        }
+        return error.message;
+      }
+    }
     return undefined;
-  }
-
-  private numberValidations(value: string) {
-    let num = this.parse(value);
-    if (this.minimum != null && num < this.minimum) {
-      return config.i18n`Value has to be higher or equal than ${this.minimum.toString()}`;
-    }
-    if (this.maximum != null && num > this.maximum) {
-      return config.i18n`Value has to be lower or equal than ${this.maximum.toString()}`;
-    }
-    if (this.exclusiveMinimum != null && num <= this.exclusiveMinimum) {
-      return config.i18n`Value has to be higher than ${this.exclusiveMinimum.toString()}`;
-    }
-    if (this.exclusiveMaximum != null && num >= this.exclusiveMaximum) {
-      return config.i18n`Value has to be lower than ${this.exclusiveMaximum.toString()}`;
-    }
-  }
-
-  private arrayValidations(value: any[]) {
-    if (this.minItems != null && value.length < this.minItems) {
-      return config.i18n`Collection has to contain at least ${this.minItems.toString()} ${plural(
-        'item',
-        this.minItems
-      )}`;
-    }
-    if (this.maxItems != null && value.length > this.maxItems) {
-      return config.i18n`Collection has to contain maximum ${this.maxItems.toString()} ${plural(
-        'item',
-        this.maxItems
-      )}`;
-    }
-    if (this.uniqueItems && value.length > 1) {
-      const invalid: number[] = [];
-      const array = value.map(v => v.toJS());
-      const keys = Object.getOwnPropertyNames(array[0]);
-
-      for (let i = 0; i < array.length; i++) {
-        if (array.some(v => v !== array[i] && keys.every(key => v[key] === value[i][key]))) {
-          invalid.push(i + 1);
-        }
-      }
-
-      if (invalid.length) {
-        return (
-          this.validationMessage ||
-          `Collection needs to contain unique items. Items [${invalid.join(', ')}] are repetitive`
-        );
-      }
-    }
-  }
-
-  private stringValidations(value: string) {
-    // console.log(this.key);
-
-    if (value && this.pattern && !this.pattern.test(value)) {
-      return 'Incorrect format';
-    }
-
-    if (this.minLength != null && value && value.length < this.minLength) {
-      return `Too short. Has to contain at least ${this.minLength} ${plural(
-        'character',
-        this.minLength
-      )}`;
-    }
-
-    if (this.maxLength != null && value && value.length > this.maxLength) {
-      return `Too long. Has to contain maximum ${this.maxLength} ${plural(
-        'character',
-        this.maxLength
-      )}`;
-    }
-
-    return undefined;
-  }
-
-  private isValid(result: string) {
-    return result ? this.validationMessage || result : undefined;
   }
 }

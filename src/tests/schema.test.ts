@@ -1,5 +1,8 @@
 import { JSONSchema } from '../json_schema';
 import { Schema } from '../data_schema_model';
+import { buildStore } from '../mst_builder';
+import { config } from '../config';
+import { DataSet } from '../form_store';
 
 describe('Schema', () => {
   function createBaseSchema(): JSONSchema {
@@ -10,7 +13,8 @@ describe('Schema', () => {
           type: 'boolean'
         },
         second: {
-          type: 'boolean'
+          type: 'boolean',
+          default: false
         },
         requiredString: {
           type: 'string'
@@ -33,74 +37,155 @@ describe('Schema', () => {
     };
   }
 
+  describe('convertPath', () => {
+    it('converts paths from mobx-state-tree to json schema style', () => {
+      expect(Schema.convertPath('/tomi/other/0/now/1')).toEqual('.tomi.other[0].now[1]');
+    });
+  });
+
+  describe('reassignErrors', () => {
+    it('assigns required field errors as specific errors', () => {
+      expect(
+        Schema.reassignErrors([
+          {
+            keyword: 'required',
+            dataPath: '',
+            schemaPath: '#/required',
+            params: {
+              missingProperty: 'name'
+            },
+            message: "should have required property 'name'"
+          },
+          {
+            keyword: 'required',
+            dataPath: '.accounts[0]',
+            schemaPath: '#/properties/accounts/items/required',
+            params: {
+              missingProperty: 'money'
+            },
+            message: "should have required property 'money'"
+          }
+        ])
+      ).toEqual([
+        {
+          keyword: 'required',
+          dataPath: '.name',
+          schemaPath: '#/required',
+          params: {
+            missingProperty: 'name'
+          },
+          message: 'Value is required'
+        },
+        {
+          keyword: 'required',
+          dataPath: '.accounts[0].money',
+          schemaPath: '#/properties/accounts/items/required',
+          params: {
+            missingProperty: 'money'
+          },
+          message: 'Value is required'
+        }
+      ]);
+    });
+  });
+
+  describe('parseParent', () => {
+    it('creates a parent path and a property', () => {
+      expect(Schema.parseParent('')).toEqual({ property: '', dataPath: '' });
+      expect(Schema.parseParent('foo')).toEqual({ property: 'foo', dataPath: '' });
+      expect(Schema.parseParent('foo.boo')).toEqual({ property: 'boo', dataPath: 'foo' });
+      expect(Schema.parseParent('foo[0].boo')).toEqual({ property: 'boo', dataPath: 'foo[0]' });
+    });
+  });
+
   describe('validateWithReport', () => {
     it('validates required value', () => {
       const schemaDef = createBaseSchema();
       schemaDef.required = ['first'];
 
-      const schema = new Schema(schemaDef); /*?*/
-      const result = schema.validateDataset({});
+      const schema = new Schema(schemaDef);
+      const result = schema.validate({} as DataSet);
 
-      expect(result).toEqual({ first: 'Value is required' });
+      expect(result).toEqual([
+        {
+          dataPath: '.first',
+          keyword: 'required',
+          message: 'Value is required',
+          params: { missingProperty: 'first' },
+          schemaPath: '#/required'
+        }
+      ]);
     });
 
     it('valid schema returns undefined', () => {
       const schemaDef = createBaseSchema();
       const schema = new Schema(schemaDef);
-      const result = schema.validateDataset({});
-      expect(result).toBeUndefined();
+      const result = schema.validate({} as DataSet);
+      expect(result).toBeFalsy();
     });
 
-    it('validates anyOf value', () => {
-      // ====================================
-      // if all are false it is an error
-      // one value
+    it('assigns errors to dataset', () => {
+      config.setDirty = jest.fn();
+      const schemaDef = createBaseSchema();
+      schemaDef.required = ['first'];
+      const schema = new Schema(schemaDef);
 
-      let result = null;
-      let schemaDef = createBaseSchema();
-      schemaDef.anyOf = [{ required: ['first'] }];
+      const dataset = buildStore(schema).create({ integer: '2.3' });
 
-      let schema = new Schema(schemaDef);
-      expect(schema.validateDataset({})).toEqual({
-        first: 'Value is required'
-      });
-      expect(schema.validateDataset({ first: true })).toBeUndefined();
-
-      // two values
-
-      schemaDef = createBaseSchema();
-      schemaDef.anyOf = [{ required: ['first'] }, { required: ['second'] }];
-
-      schema = new Schema(schemaDef);
-      expect(schema.validateDataset({ first: true })).toBeUndefined();
-      expect(schema.validateDataset({ second: true })).toBeUndefined();
-      result = schema.validateDataset({});
-
-      expect(result).toEqual([{ first: 'Value is required' }, { second: 'Value is required' }]);
-    });
-
-    it('validates dataset with arrays', () => {
-      const s: JSONSchema = {
-        type: 'object',
-        properties: {
-          arr: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                foo: { type: 'string' },
-                boo: { type: 'string' }
-              },
-              anyOf: [{ required: ['foo'] }, { required: ['boo'] }]
-            }
-          }
+      const r = schema.validate(dataset);
+      expect(r).toEqual([
+        {
+          dataPath: '.first',
+          keyword: 'required',
+          message: 'Value is required',
+          params: { missingProperty: 'first' },
+          schemaPath: '#/required'
+        },
+        {
+          dataPath: '.integer',
+          keyword: 'type',
+          message: 'should be integer',
+          params: { type: 'integer' },
+          schemaPath: '#/properties/integer/type'
         }
-      };
-      let schema = new Schema(s);
-      expect(schema.validateDataset({ arr: [{}] })).toEqual([
-        { arr: [{ foo: 'Value is required' }] },
-        { arr: [{ boo: 'Value is required' }] }
       ]);
+
+      let result = schema.validateAndAssignErrors(dataset);
+
+      expect(result).toEqual([
+        {
+          dataPath: '.first',
+          keyword: 'required',
+          message: 'Value is required',
+          params: { missingProperty: 'first' },
+          schemaPath: '#/required'
+        },
+        {
+          dataPath: '.integer',
+          keyword: 'type',
+          message: 'should be integer',
+          params: { type: 'integer' },
+          schemaPath: '#/properties/integer/type'
+        }
+      ]);
+      expect(dataset.errors.get('integer')).toBe('should be integer');
+      expect(dataset.errors.get('first')).toBe('Value is required');
+
+      dataset.setValue('first', true);
+
+      result = schema.validateAndAssignErrors(dataset);
+
+      expect(result).toEqual([
+        {
+          dataPath: '.integer',
+          keyword: 'type',
+          message: 'should be integer',
+          params: { type: 'integer' },
+          schemaPath: '#/properties/integer/type'
+        }
+      ]);
+      expect(dataset.errors.get('integer')).toBe('should be integer');
+      expect(dataset.errors.get('first')).toBe('');
     });
 
     it('validates combined value', () => {
@@ -117,202 +202,15 @@ describe('Schema', () => {
       ];
 
       let schema = new Schema(schemaDef);
-      expect(schema.validateDataset({ first: true })).toEqual([
-        { integer: 'Value is required' },
-        { integer: 'Value is required', second: 'Value is required' }
-      ]);
-      result = schema.validateDataset({});
-      expect(result).toEqual([
-        { first: 'Value is required', integer: 'Value is required' },
-        { integer: 'Value is required', second: 'Value is required' }
-      ]);
-    });
-
-    it('validates anyOf number value', () => {
-      // if all are false it is an error
-      // one value
-
-      let schemaDef = createBaseSchema();
-      schemaDef.properties.integer.minimum = 10;
-
-      let schema = new Schema(schemaDef);
-
-      const result = schema.validateDataset({ integer: 5 });
-      expect(result).toEqual({
-        integer: 'Value has to be higher or equal than 10'
-      });
-      expect(schema.validateDataset({ integer: 10 })).toBeUndefined();
-    });
-
-    it('validates anyOf internal number value', () => {
-      // if all are false it is an error
-      // one value
-
-      let schemaDef = createBaseSchema();
-      schemaDef.properties.complex.properties.max5.maximum = 5;
-
-      let schema = new Schema(schemaDef);
-
-      let result = schema.validateDataset({ complex: { max5: 15 } });
-      expect(result).toEqual({
-        complex: { max5: 'Value has to be lower or equal than 5' }
-      });
-      expect(schema.validateDataset({ complex: { max5: 0 } })).toBeUndefined();
-    });
-
-    it('validates anyOf number value', () => {
-      // if all are false it is an error
-      // one value
-
-      let schemaDef = createBaseSchema();
-      schemaDef.properties.integer.anyOf = [{ minimum: 10 }, { maximum: 0 }];
-
-      let schema = new Schema(schemaDef);
-
-      expect(schema.validateDataset({ integer: 5 })).toEqual([
-        { integer: 'Value has to be higher or equal than 10' },
-        { integer: 'Value has to be lower or equal than 0' }
-      ]);
-    });
-
-    it('validates allOf number value', () => {
-      // if all are false it is an error
-      // one value
-
-      let schemaDef = createBaseSchema();
-      schemaDef.properties.integer.allOf = [{ minimum: 10 }, { maximum: 0 }];
-
-      let schema = new Schema(schemaDef);
-
-      let result = schema.validateDataset({ integer: 5 });
-      expect(result).toEqual({ integer: 'Value has to be higher or equal than 10' });
-
-      result = schema.validateDataset({ integer: 15 });
-      expect(result).toEqual({ integer: 'Value has to be lower or equal than 0' });
-    });
-
-    it('validates allOf value', () => {
-      // ====================================
-      // if all are false it is an error
-      // one value
-
-      let schemaDef = createBaseSchema();
-      schemaDef.allOf = [{ required: ['first'] }];
-      schemaDef.properties.integer.minimum = 5;
-
-      let schema = new Schema(schemaDef);
-      expect(schema.validateDataset({ integer: 2 })).toEqual({
-        first: 'Value is required',
-        integer: 'Value has to be higher or equal than 5'
-      });
-      expect(schema.validateDataset({ first: true })).toBeUndefined();
-
-      // two values
-
-      schemaDef = createBaseSchema();
-      schemaDef.allOf = [{ required: ['first'] }, { required: ['second'] }];
-
-      schema = new Schema(schemaDef);
-      expect(schema.validateDataset({ first: true, second: true })).toBeUndefined();
-
-      let result = schema.validateDataset({ first: true });
-      expect(result).toEqual({ second: 'Value is required' });
-
-      expect(schema.validateDataset({ second: true })).toEqual({ first: 'Value is required' });
-      result = schema.validateDataset({});
-      expect(result).toEqual({ first: 'Value is required', second: 'Value is required' });
-    });
-
-    xit('validates oneOf value', () => {
-      // ====================================
-      // if all are false it is an error
-      // one value
-
-      let schemaDef = createBaseSchema();
-      schemaDef.oneOf = [{ required: ['first'] }];
-
-      let schema = new Schema(schemaDef);
-      // expect(schema.validateDataset({})).toEqual({
-      //   VALIDATION: [{ oneOf: [{ REQUIRED: ['first'] }] }]
-      // });
-      // expect(schema.validateDataset({ first: true })).toBeUndefined();
-
-      // two required values
-      schemaDef = createBaseSchema();
-      schemaDef.oneOf = [{ required: ['first'] }, { required: ['second'] }];
-      // schemaDef.properties.integer.minimum = 5;
-      schemaDef.properties.integer.oneOf = [{ minimum: 10 }, { minimum: 15 }];
-
-      schema = new Schema(schemaDef);
-      // expect(schema.validateDataset({})).toEqual({
-      //   VALIDATION: [{ oneOf: [{ REQUIRED: ['first'] }, { REQUIRED: ['second'] }] }]
-      // });
-      expect(schema.validateDataset({ first: true, second: true, integer: 3 })).toEqual({
-        VALIDATION: [
-          {
-            oneOf: [
-              {
-                first: 'REQUIRED',
-                integer: {
-                  VALIDATION: [
-                    {
-                      oneOf: [
-                        'Value has to be higher or equal than 10',
-                        'Value has to be higher or equal than 15'
-                      ]
-                    }
-                  ]
-                }
-              },
-              {
-                integer: {
-                  VALIDATION: [
-                    {
-                      oneOf: [
-                        'Value has to be higher or equal than 10',
-                        'Value has to be higher or equal than 15'
-                      ]
-                    }
-                  ]
-                },
-                second: 'REQUIRED'
-              }
-            ]
-          }
-        ]
-      });
-
-      // two values
-
-      schemaDef = createBaseSchema();
-      schemaDef.properties.integer.oneOf = [{ minimum: 10 }, { minimum: 15 }];
-
-      schema = new Schema(schemaDef);
-      expect(schema.validateDataset({ integer: 25 })).toEqual({
-        integer: {
-          VALIDATION: [
-            {
-              oneOf: [
-                'Value has to be higher or equal than 10',
-                'Value has to be higher or equal than 15'
-              ]
-            }
-          ]
+      expect(schema.validate({ first: true } as any)).toEqual([
+        {
+          dataPath: '.integer',
+          keyword: 'required',
+          message: 'Value is required',
+          params: { missingProperty: 'integer' },
+          schemaPath: '#/allOf/0/required'
         }
-      });
-      expect(schema.validateDataset({ integer: 2 })).toEqual({
-        integer: {
-          VALIDATION: [
-            {
-              oneOf: [
-                'Value has to be higher or equal than 10',
-                'Value has to be higher or equal than 15'
-              ]
-            }
-          ]
-        }
-      });
-      expect(schema.validateDataset({ integer: 11 })).toBeUndefined();
+      ]);
     });
   });
 });

@@ -1,5 +1,6 @@
 import { observable, toJS } from 'mobx';
-import { types, getParent, getRoot } from 'mobx-state-tree';
+import { types } from 'mobx-state-tree';
+import Ajv from 'ajv';
 
 import { Schema } from './data_schema_model';
 import { config } from './config';
@@ -16,24 +17,35 @@ export type ValidationResult = {
   total: number;
 };
 
-function strip(obj: any) {
+function strip(obj: any, replaceEmpty: boolean) {
   if (typeof obj === 'object') {
     if (obj.errors) {
       delete obj.errors;
+      delete obj.inversePatches;
       delete obj.history;
     }
 
     for (let key of Object.getOwnPropertyNames(obj)) {
       let item = obj[key];
-      strip(item);
+      if (item === '') {
+        if (replaceEmpty) {
+          obj[key] = undefined;
+        }
+      } else if (typeof item === 'object') {
+        strip(item, replaceEmpty);
+      } else if (Array.isArray(item)) {
+        for (let a of item) {
+          strip(a, replaceEmpty);
+        }
+      }
     }
   }
 
-  if (Array.isArray(obj)) {
-    for (let item of obj) {
-      strip(item);
-    }
-  }
+  // if (Array.isArray(obj)) {
+  //   for (let item of obj) {
+  //     strip(item);
+  //   }
+  // }
   return obj;
 }
 
@@ -107,13 +119,13 @@ export const FormStore = types
         const data = self.getSchema(key).items.defaultValue();
         self.getValue(key).push(data);
 
-        this.validate(key);
+        this.validateField(key);
       },
       isRequired(key: string) {
         return self.getSchema(key).required;
       },
       parseValue(key: string, value: any) {
-        return self.getSchema(key).parse(value);
+        return self.getSchema(key).tryParse(value);
       },
       removeRow(key: string, index: number) {
         store[key].splice(index);
@@ -130,99 +142,37 @@ export const FormStore = types
           return (self as any)[first].setValue(rest, value);
         } else {
           // set value for validation
-          store[key] = value;
+          setValue(key, self.getSchema(key).tryParse(value));
 
-          // value is correct set the parsed value
-          if (!this.validateValue(key)) {
-            setValue(key, self.getSchema(key).parse(value));
-          }
-          // setValue(
-          //   key,
-          //   this.validateValue(key, value) || value === ''
-          //     ? value
-          //     : self.getSchema(key).parse(value)
-          // );
+          // validate
+          this.validateField(key);
         }
       },
-      toJS() {
-        return strip(toJS(self));
+      toJS(replaceEmpty = true) {
+        return strip(toJS(self), replaceEmpty);
       },
       toJSString() {
         return JSON.stringify(this.toJS(), null, 2);
       },
-      assignValidations(validations: any, dataset: any): string[] {
-        let d = dataset as DataSet;
-        let errors: string[] = [];
-
-        for (let key of Object.getOwnPropertyNames(validations)) {
-          let property = validations[key];
-
-          // console.log(key);
-          // console.log(property);
-          // console.log(dataset.code);
-          // console.log(d.errors);
-
-          if (typeof property === 'object') {
-            errors.push(...this.assignValidations(property, dataset[key]));
-          } else if (property.type === 'array') {
-            let data = dataset.getValue(key);
-            for (let i = 0; i < data.length; i++) {
-              errors.push(...this.assignValidations(property[i], data[i]));
-            }
-          } else {
-            errors.push(key + ': ' + property);
-            d.errors.set(key, property);
-          }
+      validateDataset(assign = true): false | Ajv.ErrorObject[] {
+        const root = self.getSchema().rootSchema();
+        if (assign) {
+          return root.validateAndAssignErrors(self as DataSet);
+        } else {
+          return root.validate(self as DataSet);
         }
-        return errors;
       },
-      validateAll(assign = true): string[] {
-        let validations = self.getSchema().validateDataset(self);
-        let doobie = validations && (validations[0] || validations); // aybe in the future I will work will all validations
+      validateField(key: string) {
+        // console.log('===============');
 
-        if (doobie) {
-          if (assign) {
-            return this.assignValidations(doobie, self);
-          }
-          return doobie;
-        }
-        return undefined;
-      },
-      validate(key: string) {
-        return this.validateValue(key); // , self.getValue(key));
-      },
-      validateValue(key: string) {
-        console.log('===============');
+        // remove error
+        self.errors.set(key, '');
 
         // get root and validate root
-        let schema = self.getSchema(key);
-        let path = [key];
-        let root = getRoot(self);
-        let validations = (root as any).validateAll(false);
-        console.log(validations);
-        let parent = schema.parent;
-        while (parent && parent.key) {
-          path.push(parent.key);
-          parent = parent.parent;
-        }
-        console.log(path);
+        const schema = self.getSchema().rootSchema();
 
-        // find the property in validation results
-        let validation = validations;
-        while (path.length && validation) {
-          let key = path.pop();
-          validation = validation[key];
-          console.log(validation);
-        }
-        console.log(validation);
-
-        // console.log(validation);
-        // const error = self
-        //   .getSchema(key)
-        //   .validate(value === undefined ? self.getValue(key) : value, self);
-        self.errors.set(key, validation || '');
-
-        return validation;
+        // const value = (self as any)[key];
+        return schema.validateField(self, key, true);
       }
     };
   });

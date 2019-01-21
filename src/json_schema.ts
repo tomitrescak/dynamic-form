@@ -26,6 +26,7 @@ export interface JSONSchema {
      ======================================================== */
 
   expression?: string;
+  validationExpression?: string;
   validationMessage?: string;
   properties?: {
     [key: string]: JSONSchema;
@@ -33,7 +34,7 @@ export interface JSONSchema {
   /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-6.1
    */
-  type?: JSONSchema7TypeName | 'id' | 'expression' | 'date';
+  type?: JSONSchema7TypeName;
   enum?: JSONSchema7Type[];
   const?: JSONSchema7Type;
 

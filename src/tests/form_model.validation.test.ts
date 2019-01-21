@@ -29,7 +29,15 @@ describe('FormModel: validation', () => {
 
     let formModel = new FormModel(form, schema, { code: '' });
     let valid = formModel.validateWithReport(); /*?*/
-    expect(valid).toEqual(['code: Value is required']);
+    expect(valid).toEqual([
+      {
+        dataPath: '.code',
+        keyword: 'required',
+        message: 'Value is required',
+        params: { missingProperty: 'code' },
+        schemaPath: '#/required'
+      }
+    ]);
     expect(formModel.dataSet.errors.get('code')).toBe('Value is required');
 
     formModel.dataSet.setValue('code', 'AAA');
@@ -59,9 +67,29 @@ describe('FormModel: validation', () => {
 
     let formModel = new FormModel(form, schema, { code: 'AAAAA' });
     let valid = formModel.validateWithReport(); /*?*/
-    expect(valid).toEqual(['code: Too long. Has to contain maximum 3 characters']);
-    expect(formModel.dataSet.errors.get('code')).toBe(
-      'Too long. Has to contain maximum 3 characters'
-    );
+    expect(valid).toEqual([
+      {
+        dataPath: '.code',
+        keyword: 'maxLength',
+        message: 'should NOT be longer than 3 characters',
+        params: { limit: 3 },
+        schemaPath: '#/properties/code/anyOf/0/maxLength'
+      },
+      {
+        dataPath: '.code',
+        keyword: 'minLength',
+        message: 'should NOT be shorter than 10 characters',
+        params: { limit: 10 },
+        schemaPath: '#/properties/code/anyOf/1/minLength'
+      },
+      {
+        dataPath: '.code',
+        keyword: 'anyOf',
+        message: 'should match some schema in anyOf',
+        params: {},
+        schemaPath: '#/properties/code/anyOf'
+      }
+    ]);
+    expect(formModel.dataSet.errors.get('code')).toBe('should NOT be longer than 3 characters');
   });
 });
