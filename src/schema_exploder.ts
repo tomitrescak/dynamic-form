@@ -46,6 +46,10 @@ export function explode(obj: JSONSchema, parent: Parent = null): JSONSchema[] {
     parent = createParent(null, obj, null);
   }
 
+  if (obj.oneOf) {
+    throw new Error('oneOf is currently not supported');
+  }
+
   // anyOf multiplies the schema
   if (obj.anyOf) {
     exploded = true;
@@ -104,6 +108,11 @@ export function explode(obj: JSONSchema, parent: Parent = null): JSONSchema[] {
     return processProperties(obj, parent);
   }
 
+  if (obj.type === 'array' && (obj.items as JSONSchema).properties) {
+    // let m = explode(obj.items as JSONSchema, parent); /*?*/
+    return explode(obj.items as JSONSchema, parent).map(r => ({ ...obj, items: r }));
+  }
+
   return [obj];
 }
 
@@ -146,7 +155,7 @@ function processProperties(obj: any, parent: any) {
     if (explodedProperties.length > 1) {
       // find the root schema and remember the path
       // from the path we can reconstruct the object
-      let { root, path } = findParent(parent); /*?.root*/
+      let { root, path } = findParent(parent);
 
       // remove root from collection
       const i = items.indexOf(root);

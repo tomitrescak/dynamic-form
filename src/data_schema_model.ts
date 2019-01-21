@@ -1,5 +1,7 @@
 import * as validations from './validation';
 
+import * as ajv from 'ajv';
+
 import { plural, safeEval } from './form_utils';
 import { JSONSchemaType, JSONSchema } from './json_schema';
 import { config } from './config';
@@ -47,6 +49,15 @@ export class Schema {
     schema: JSONSchema,
     { parent = null, required = false, key = null, createCombinations = true }: SchemaOptions = {}
   ) {
+    if (createCombinations) {
+      // create all possible combinations of this schems
+      let { schemas, exploded } = expandSchemas(schema);
+
+      if (exploded) {
+        this.combinations = schemas.map(s => new Schema(s, { createCombinations: false }));
+      }
+    }
+
     this.parent = parent;
     this.key = key;
 
@@ -68,14 +79,6 @@ export class Schema {
       'validationMessage',
       'enum'
     ]);
-
-    if (createCombinations) {
-      // create all possible combinations of this schems
-      let { schemas, exploded } = expandSchemas(schema);
-      if (exploded) {
-        this.combinations = schemas.map(s => new Schema(s, { createCombinations: false }));
-      }
-    }
 
     if (required) {
       this.required = required;
@@ -181,6 +184,7 @@ export class Schema {
       }
       return results.length > 1 ? results : results[0];
     }
+
     return this.validateSingle(dataset);
   }
 
@@ -199,12 +203,12 @@ export class Schema {
         } else if (property.type === 'array') {
           result[key] = [];
           for (let item of dataset[key]) {
-            result[key].push(this.items.validateSingle(item));
+            result[key].push(property.items.validateSingle(item));
           }
         } else {
           // console.log(dataset);
 
-          let res: any = dataset && property.validate(dataset[key], dataset);
+          let res: any = dataset && property.validateValue(dataset[key], dataset);
           if (res) {
             result[key] = res;
           }
@@ -219,7 +223,11 @@ export class Schema {
     // return result;
   }
 
-  validate(value: any, datasetRoot: any = null): string {
+  validateValue(value: any, datasetRoot: any = null): string {
+    console.log('Validating: ');
+    const { parent, ...rest } = this;
+    console.log(rest);
+
     // expression
     let parsed = value != null && value !== '' ? this.parse(value) : value;
     if (this.expression && !safeEval(datasetRoot, this.expression, parsed)) {
@@ -299,6 +307,8 @@ export class Schema {
   }
 
   private stringValidations(value: string) {
+    // console.log(this.key);
+
     if (value && this.pattern && !this.pattern.test(value)) {
       return 'Incorrect format';
     }
@@ -310,7 +320,7 @@ export class Schema {
       )}`;
     }
 
-    if (this.minLength != null && value && value.length > this.maxLength) {
+    if (this.maxLength != null && value && value.length > this.maxLength) {
       return `Too long. Has to contain maximum ${this.maxLength} ${plural(
         'character',
         this.maxLength

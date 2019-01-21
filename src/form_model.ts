@@ -64,71 +64,75 @@ export class FormModel {
     return textPreview.render(this, this.dataSet);
   }
 
-  validateWithReport(root: IFormElementOwner = this, owner = this.dataSet): ValidationResult {
-    let total = 0;
-    let valid = 0;
-    let required = 0;
-    let requiredValid = 0;
-
-    // validate self
-
-    for (let element of root.elements) {
-      if (element.control === 'Form') {
-        // form can change owner
-        let result = this.validateWithReport(
-          element,
-          element.source ? owner.getValue(element.source) : owner
-        );
-        total += result.total;
-        valid += result.valid;
-        required += result.required;
-        requiredValid += result.requiredValid;
-
-        continue;
-      } else if (element.control === 'Table' || element.control === 'Repeater') {
-        // validate individual elements
-        let array: any[] = owner.getValue(element.source);
-
-        // browse array and validate each element
-        for (let item of array) {
-          let result = this.validateWithReport(element, item);
-          total += result.total;
-          valid += result.valid;
-          required += result.required;
-          requiredValid += result.requiredValid;
-        }
-      }
-
-      let schema = owner.getSchema(element.source);
-      let isRequired = schema.required || schema.minItems > 0;
-
-      // if the element is not required and it does not have any value
-      // we exclude it from the validation
-
-      if (!element.source || (!isRequired && !owner.getValue(element.source))) {
-        continue;
-      }
-
-      if (isRequired) {
-        required++;
-      }
-
-      total += 1;
-
-      let value = owner.validate(element.source);
-      if (!value) {
-        valid += 1;
-        requiredValid += isRequired ? 1 : 0;
-      }
-    }
-
-    // create report
-    return {
-      required,
-      requiredValid,
-      total,
-      valid,
-      invalid: total - valid
-    };
+  validateWithReport(root: IFormElementOwner = this, owner = this.dataSet): string[] {
+    return owner.validateAll();
   }
+
+  // validateWithReport(root: IFormElementOwner = this, owner = this.dataSet): ValidationResult {
+  //   let total = 0;
+  //   let valid = 0;
+  //   let required = 0;
+  //   let requiredValid = 0;
+
+  //   // validate self
+
+  //   for (let element of root.elements) {
+  //     if (element.control === 'Form') {
+  //       // form can change owner
+  //       let result = this.validateWithReport(
+  //         element,
+  //         element.source ? owner.getValue(element.source) : owner
+  //       );
+  //       total += result.total;
+  //       valid += result.valid;
+  //       required += result.required;
+  //       requiredValid += result.requiredValid;
+
+  //       continue;
+  //     } else if (element.control === 'Table' || element.control === 'Repeater') {
+  //       // validate individual elements
+  //       let array: any[] = owner.getValue(element.source);
+
+  //       // browse array and validate each element
+  //       for (let item of array) {
+  //         let result = this.validateWithReport(element, item);
+  //         total += result.total;
+  //         valid += result.valid;
+  //         required += result.required;
+  //         requiredValid += result.requiredValid;
+  //       }
+  //     }
+
+  //     let schema = owner.getSchema(element.source);
+  //     let isRequired = schema.required || schema.minItems > 0;
+
+  //     // if the element is not required and it does not have any value
+  //     // we exclude it from the validation
+
+  //     if (!element.source || (!isRequired && !owner.getValue(element.source))) {
+  //       continue;
+  //     }
+
+  //     if (isRequired) {
+  //       required++;
+  //     }
+
+  //     total += 1;
+
+  //     let value = owner.validate(element.source);
+  //     if (!value) {
+  //       valid += 1;
+  //       requiredValid += isRequired ? 1 : 0;
+  //     }
+  //   }
+
+  //   // create report
+  //   return {
+  //     required,
+  //     requiredValid,
+  //     total,
+  //     valid,
+  //     invalid: total - valid
+  //   };
+  // }
 }

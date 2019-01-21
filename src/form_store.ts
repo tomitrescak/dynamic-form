@@ -1,5 +1,5 @@
 import { observable, toJS } from 'mobx';
-import { types } from 'mobx-state-tree';
+import { types, getParent, getRoot } from 'mobx-state-tree';
 
 import { Schema } from './data_schema_model';
 import { config } from './config';
@@ -129,12 +129,19 @@ export const FormStore = types
           let [first, ...rest] = key.split('.');
           return (self as any)[first].setValue(rest, value);
         } else {
-          setValue(
-            key,
-            this.validateValue(key, value) || value === ''
-              ? value
-              : self.getSchema(key).parse(value)
-          );
+          // set value for validation
+          store[key] = value;
+
+          // value is correct set the parsed value
+          if (!this.validateValue(key)) {
+            setValue(key, self.getSchema(key).parse(value));
+          }
+          // setValue(
+          //   key,
+          //   this.validateValue(key, value) || value === ''
+          //     ? value
+          //     : self.getSchema(key).parse(value)
+          // );
         }
       },
       toJS() {
@@ -143,34 +150,79 @@ export const FormStore = types
       toJSString() {
         return JSON.stringify(this.toJS(), null, 2);
       },
-      validateAll(): boolean {
-        let schema = self.getSchema();
-        let valid = true;
-        for (let key of Object.getOwnPropertyNames(schema.properties)) {
-          let property = schema.properties[key];
+      assignValidations(validations: any, dataset: any): string[] {
+        let d = dataset as DataSet;
+        let errors: string[] = [];
 
-          if (property.type === 'object') {
-            valid = valid && self.getValue(key).validateAll();
+        for (let key of Object.getOwnPropertyNames(validations)) {
+          let property = validations[key];
+
+          // console.log(key);
+          // console.log(property);
+          // console.log(dataset.code);
+          // console.log(d.errors);
+
+          if (typeof property === 'object') {
+            errors.push(...this.assignValidations(property, dataset[key]));
           } else if (property.type === 'array') {
-            for (let item of self.getValue(key)) {
-              valid = valid && !schema.items.validate(item);
+            let data = dataset.getValue(key);
+            for (let i = 0; i < data.length; i++) {
+              errors.push(...this.assignValidations(property[i], data[i]));
             }
           } else {
-            valid = valid && !this.validate(key);
+            errors.push(key + ': ' + property);
+            d.errors.set(key, property);
           }
         }
-        return valid;
+        return errors;
+      },
+      validateAll(assign = true): string[] {
+        let validations = self.getSchema().validateDataset(self);
+        let doobie = validations && (validations[0] || validations); // aybe in the future I will work will all validations
+
+        if (doobie) {
+          if (assign) {
+            return this.assignValidations(doobie, self);
+          }
+          return doobie;
+        }
+        return undefined;
       },
       validate(key: string) {
-        return this.validateValue(key, self.getValue(key));
+        return this.validateValue(key); // , self.getValue(key));
       },
-      validateValue(key: string, value: string = null) {
-        const error = self
-          .getSchema(key)
-          .validate(value === undefined ? self.getValue(key) : value, self);
-        self.errors.set(key, error || '');
+      validateValue(key: string) {
+        console.log('===============');
 
-        return error;
+        // get root and validate root
+        let schema = self.getSchema(key);
+        let path = [key];
+        let root = getRoot(self);
+        let validations = (root as any).validateAll(false);
+        console.log(validations);
+        let parent = schema.parent;
+        while (parent && parent.key) {
+          path.push(parent.key);
+          parent = parent.parent;
+        }
+        console.log(path);
+
+        // find the property in validation results
+        let validation = validations;
+        while (path.length && validation) {
+          let key = path.pop();
+          validation = validation[key];
+          console.log(validation);
+        }
+        console.log(validation);
+
+        // console.log(validation);
+        // const error = self
+        //   .getSchema(key)
+        //   .validate(value === undefined ? self.getValue(key) : value, self);
+        self.errors.set(key, validation || '');
+
+        return validation;
       }
     };
   });

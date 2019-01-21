@@ -1,5 +1,6 @@
 import { explode } from '../schema_exploder';
 import { JSONSchema } from '../json_schema';
+import { m } from '../validation';
 
 describe('exploder', () => {
   function schema(): JSONSchema {
@@ -13,6 +14,29 @@ describe('exploder', () => {
       }
     };
   }
+
+  // it('explodes single property schema', () => {
+  //   const jsonSchema: JSONSchema = {
+  //     type: 'object',
+  //     properties: {
+  //       code: {
+  //         type: 'string',
+  //         anyOf: [{ maxLength: 3 }, { minLength: 10 }]
+  //       }
+  //     }
+  //   };
+  //   const exploded = explode(jsonSchema); /*?*/
+  //   expect(exploded).toEqual([
+  //     {
+  //       properties: { code: { maxLength: 3, type: 'string' } },
+  //       type: 'object'
+  //     },
+  //     {
+  //       properties: { code: { minLength: 10, type: 'string' } },
+  //       type: 'object'
+  //     }
+  //   ]);
+  // });
 
   it('explodes simple anyOf an a property', () => {
     const s = schema();
@@ -227,6 +251,54 @@ describe('exploder', () => {
           third: { type: 'number' }
         },
         required: ['first', 'second', 'fourth'],
+        type: 'object'
+      }
+    ]);
+  });
+
+  it('explodes schema with array values', () => {
+    const s: JSONSchema = {
+      type: 'object',
+      properties: {
+        arr: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              foo: { type: 'string' },
+              boo: { type: 'string' }
+            },
+            anyOf: [{ required: ['foo'] }, { required: ['boo'] }]
+          }
+        }
+      }
+    };
+    const exploded = explode(s);
+    expect(exploded).toEqual([
+      {
+        properties: {
+          arr: {
+            items: {
+              properties: { boo: { type: 'string' }, foo: { type: 'string' } },
+              required: ['foo'],
+              type: 'object'
+            },
+            type: 'array'
+          }
+        },
+        type: 'object'
+      },
+      {
+        properties: {
+          arr: {
+            items: {
+              properties: { boo: { type: 'string' }, foo: { type: 'string' } },
+              required: ['boo'],
+              type: 'object'
+            },
+            type: 'array'
+          }
+        },
         type: 'object'
       }
     ]);

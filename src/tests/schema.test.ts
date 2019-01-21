@@ -79,6 +79,30 @@ describe('Schema', () => {
       expect(result).toEqual([{ first: 'Value is required' }, { second: 'Value is required' }]);
     });
 
+    it('validates dataset with arrays', () => {
+      const s: JSONSchema = {
+        type: 'object',
+        properties: {
+          arr: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                foo: { type: 'string' },
+                boo: { type: 'string' }
+              },
+              anyOf: [{ required: ['foo'] }, { required: ['boo'] }]
+            }
+          }
+        }
+      };
+      let schema = new Schema(s);
+      expect(schema.validateDataset({ arr: [{}] })).toEqual([
+        { arr: [{ foo: 'Value is required' }] },
+        { arr: [{ boo: 'Value is required' }] }
+      ]);
+    });
+
     it('validates combined value', () => {
       // ====================================
       // if all are false it is an error

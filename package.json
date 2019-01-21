@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@tomino/toolbelt": "^1.0.4",
+    "ajv": "^6.7.0",
     "deepmerge": "^3.1.0"
   }
 }
