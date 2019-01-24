@@ -43,6 +43,15 @@ describe('Schema', () => {
     });
   });
 
+  describe('parseParent', () => {
+    it('creates a parent path and a property', () => {
+      expect(Schema.parseParent('')).toEqual({ property: '', dataPath: '' });
+      expect(Schema.parseParent('foo')).toEqual({ property: 'foo', dataPath: '' });
+      expect(Schema.parseParent('foo.boo')).toEqual({ property: 'boo', dataPath: 'foo' });
+      expect(Schema.parseParent('foo[0].boo')).toEqual({ property: 'boo', dataPath: 'foo[0]' });
+    });
+  });
+
   describe('reassignErrors', () => {
     it('assigns required field errors as specific errors', () => {
       expect(
@@ -58,7 +67,7 @@ describe('Schema', () => {
           },
           {
             keyword: 'required',
-            dataPath: '.accounts[0]',
+            dataPath: '/accounts/0',
             schemaPath: '#/properties/accounts/items/required',
             params: {
               missingProperty: 'money'
@@ -69,7 +78,7 @@ describe('Schema', () => {
       ).toEqual([
         {
           keyword: 'required',
-          dataPath: '.name',
+          dataPath: '/name',
           schemaPath: '#/required',
           params: {
             missingProperty: 'name'
@@ -78,7 +87,7 @@ describe('Schema', () => {
         },
         {
           keyword: 'required',
-          dataPath: '.accounts[0].money',
+          dataPath: '/accounts/0/money',
           schemaPath: '#/properties/accounts/items/required',
           params: {
             missingProperty: 'money'
@@ -89,16 +98,7 @@ describe('Schema', () => {
     });
   });
 
-  describe('parseParent', () => {
-    it('creates a parent path and a property', () => {
-      expect(Schema.parseParent('')).toEqual({ property: '', dataPath: '' });
-      expect(Schema.parseParent('foo')).toEqual({ property: 'foo', dataPath: '' });
-      expect(Schema.parseParent('foo.boo')).toEqual({ property: 'boo', dataPath: 'foo' });
-      expect(Schema.parseParent('foo[0].boo')).toEqual({ property: 'boo', dataPath: 'foo[0]' });
-    });
-  });
-
-  describe('validateWithReport', () => {
+  describe('validate', () => {
     it('validates required value', () => {
       const schemaDef = createBaseSchema();
       schemaDef.required = ['first'];
@@ -108,7 +108,7 @@ describe('Schema', () => {
 
       expect(result).toEqual([
         {
-          dataPath: '.first',
+          dataPath: '/first',
           keyword: 'required',
           message: 'Value is required',
           params: { missingProperty: 'first' },
@@ -135,14 +135,14 @@ describe('Schema', () => {
       const r = schema.validate(dataset);
       expect(r).toEqual([
         {
-          dataPath: '.first',
+          dataPath: '/first',
           keyword: 'required',
           message: 'Value is required',
           params: { missingProperty: 'first' },
           schemaPath: '#/required'
         },
         {
-          dataPath: '.integer',
+          dataPath: '/integer',
           keyword: 'type',
           message: 'should be integer',
           params: { type: 'integer' },
@@ -154,14 +154,14 @@ describe('Schema', () => {
 
       expect(result).toEqual([
         {
-          dataPath: '.first',
+          dataPath: '/first',
           keyword: 'required',
           message: 'Value is required',
           params: { missingProperty: 'first' },
           schemaPath: '#/required'
         },
         {
-          dataPath: '.integer',
+          dataPath: '/integer',
           keyword: 'type',
           message: 'should be integer',
           params: { type: 'integer' },
@@ -177,7 +177,7 @@ describe('Schema', () => {
 
       expect(result).toEqual([
         {
-          dataPath: '.integer',
+          dataPath: '/integer',
           keyword: 'type',
           message: 'should be integer',
           params: { type: 'integer' },
@@ -185,6 +185,89 @@ describe('Schema', () => {
         }
       ]);
       expect(dataset.errors.get('integer')).toBe('should be integer');
+      expect(dataset.errors.get('first')).toBe('');
+    });
+
+    it('assigns custom errors to dataset', () => {
+      config.setDirty = jest.fn();
+      const schemaDef = createBaseSchema();
+      schemaDef.required = ['first'];
+      schemaDef.errorMessage = { required: { first: 'First must be specified!' } };
+      schemaDef.properties.integer.errorMessage = 'Must be int, buddy!';
+      const schema = new Schema(schemaDef);
+
+      const dataset = buildStore(schema).create({ integer: '2.3' });
+
+      const r = schema.validate(dataset);
+      const validationResult = [
+        {
+          keyword: 'errorMessage',
+          dataPath: '/integer',
+          schemaPath: '#/properties/integer/errorMessage',
+          params: {
+            errors: [
+              {
+                keyword: 'type',
+                dataPath: '/integer',
+                schemaPath: '#/properties/integer/type',
+                params: { type: 'integer' },
+                message: 'should be integer'
+              }
+            ]
+          },
+          message: 'Must be int, buddy!'
+        },
+        {
+          keyword: 'errorMessage',
+          dataPath: '/first',
+          schemaPath: '#/errorMessage',
+          params: {
+            errors: [
+              {
+                keyword: 'required',
+                dataPath: '',
+                schemaPath: '#/required',
+                params: { missingProperty: 'first' },
+                message: "should have required property 'first'"
+              }
+            ]
+          },
+          message: 'First must be specified!'
+        }
+      ];
+
+      expect(r).toEqual(validationResult);
+
+      let result = schema.validateAndAssignErrors(dataset);
+
+      expect(result).toEqual(validationResult);
+      expect(dataset.errors.get('integer')).toBe('Must be int, buddy!');
+      expect(dataset.errors.get('first')).toBe('First must be specified!');
+
+      dataset.setValue('first', true);
+
+      result = schema.validateAndAssignErrors(dataset);
+
+      expect(result).toEqual([
+        {
+          keyword: 'errorMessage',
+          dataPath: '/integer',
+          schemaPath: '#/properties/integer/errorMessage',
+          params: {
+            errors: [
+              {
+                keyword: 'type',
+                dataPath: '/integer',
+                schemaPath: '#/properties/integer/type',
+                params: { type: 'integer' },
+                message: 'should be integer'
+              }
+            ]
+          },
+          message: 'Must be int, buddy!'
+        }
+      ]);
+      expect(dataset.errors.get('integer')).toBe('Must be int, buddy!');
       expect(dataset.errors.get('first')).toBe('');
     });
 
@@ -204,7 +287,7 @@ describe('Schema', () => {
       let schema = new Schema(schemaDef);
       expect(schema.validate({ first: true } as any)).toEqual([
         {
-          dataPath: '.integer',
+          dataPath: '/integer',
           keyword: 'required',
           message: 'Value is required',
           params: { missingProperty: 'integer' },

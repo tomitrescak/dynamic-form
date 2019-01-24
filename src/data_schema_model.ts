@@ -11,7 +11,7 @@ import { safeEval } from './form_utils';
 import { DataSet } from './form_store';
 
 const defaultAjv = new Ajv({ allErrors: true, useDefaults: true });
-// initCustomErrors(defaultAjv);
+initCustomErrors(defaultAjv);
 
 defaultAjv.addKeyword('validationExpression', {
   // type: 'string',]
@@ -39,9 +39,7 @@ defaultAjv.addKeyword('validationExpression', {
       (v as any).errors.push({
         keyword: 'validationExpression',
         dataPath: elementPath,
-        message: elementSchema.validationMessage
-          ? elementSchema.validationMessage
-          : 'Value is invalid',
+        message: elementSchema.errorMessage ? elementSchema.errorMessage : 'Value is invalid',
         params: {
           keyword: 'validationExpression'
         }
@@ -176,14 +174,21 @@ export class Schema {
       // missing properties are propagated into properties themselves
       // rendering as "value is required"
       if (error.params && error.params.missingProperty) {
-        error.dataPath += '.' + error.params.missingProperty;
+        error.dataPath += '/' + error.params.missingProperty;
         error.message = 'Value is required';
+      } else if (error.keyword === 'errorMessage') {
+        let required = error.params.errors.find((p: Ajv.ErrorObject) => p.keyword === 'required');
+        if (required) {
+          error.dataPath += '/' + required.params.missingProperty;
+        }
       }
     }
     return errors;
   }
 
   static parseParent(dataPath: string) {
+    dataPath = Schema.convertPath(dataPath);
+
     if (dataPath.indexOf('.') >= 0) {
       return {
         dataPath: dataPath.substring(0, dataPath.lastIndexOf('.')),
@@ -253,12 +258,17 @@ export class Schema {
   validateField(value: IAnyStateTreeNode, key: string, assignErrors = false) {
     // mobx's 'getPath' generates path such as /prop/path/0
     // we need to convert it to the json schema type path such as.prop.path[0]
-    const path = Schema.convertPath(getPath(value)) + (key ? '.' + key : '');
+    // const path = Schema.convertPath(getPath(value)) + (key ? '.' + key : '');
+    const path = getPath(value) + (key ? '/' + key : '');
+
     // console.log('Validating: ' + path);
 
     // validate the whole dataset from its root
     const root: DataSet = getRoot(value);
     const errors = this.validate(root as DataSet);
+
+    // console.log(path);
+    // console.log(errors);
 
     // console.log(root.fatherAge)
     // console.log(errors);

@@ -20,6 +20,12 @@ export interface JSONSchema7Array extends Array<JSONSchema7Type> {}
 
 export type JSONSchemaType = JSONSchema7Type;
 
+export type ErrorMessages = {
+  [index: string]: ErrorMessage;
+};
+
+export type ErrorMessage = string | ErrorMessages;
+
 export interface JSONSchema {
   /* =========================================================
       OVERRIDEN
@@ -27,7 +33,6 @@ export interface JSONSchema {
 
   expression?: string;
   validationExpression?: string;
-  validationMessage?: string;
   properties?: {
     [key: string]: JSONSchema;
   };
@@ -83,11 +88,12 @@ export interface JSONSchema {
   patternProperties?: {
     [key: string]: JSONSchema;
   };
-  additionalProperties?: JSONSchema;
+  additionalProperties?: JSONSchema | boolean;
   dependencies?: {
     [key: string]: JSONSchema | string[];
   };
   propertyNames?: JSONSchema;
+  errorMessage?: ErrorMessage;
 
   /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-6.6

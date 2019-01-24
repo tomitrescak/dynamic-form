@@ -31,7 +31,7 @@ describe('FormModel: validation', () => {
     let valid = formModel.validateWithReport(); /*?*/
     expect(valid).toEqual([
       {
-        dataPath: '.code',
+        dataPath: '/code',
         keyword: 'required',
         message: 'Value is required',
         params: { missingProperty: 'code' },
@@ -69,21 +69,21 @@ describe('FormModel: validation', () => {
     let valid = formModel.validateWithReport(); /*?*/
     expect(valid).toEqual([
       {
-        dataPath: '.code',
+        dataPath: '/code',
         keyword: 'maxLength',
         message: 'should NOT be longer than 3 characters',
         params: { limit: 3 },
         schemaPath: '#/properties/code/anyOf/0/maxLength'
       },
       {
-        dataPath: '.code',
+        dataPath: '/code',
         keyword: 'minLength',
         message: 'should NOT be shorter than 10 characters',
         params: { limit: 10 },
         schemaPath: '#/properties/code/anyOf/1/minLength'
       },
       {
-        dataPath: '.code',
+        dataPath: '/code',
         keyword: 'anyOf',
         message: 'should match some schema in anyOf',
         params: {},

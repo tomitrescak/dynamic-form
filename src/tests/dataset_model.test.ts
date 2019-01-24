@@ -36,7 +36,7 @@ describe('Dataset', () => {
       fatherAge: {
         type: 'integer',
         validationExpression: 'value > this.age + 18',
-        validationMessage: 'Father age must be at least 18 years more then your age'
+        errorMessage: 'Father age must be at least 18 years more then your age'
       },
       accounts: {
         type: 'array',
@@ -51,7 +51,7 @@ describe('Dataset', () => {
             money: {
               type: 'number',
               validationExpression: 'this.money % 2 === 0', // allow only to add higher value,
-              validationMessage: 'You can only put even value of money!'
+              errorMessage: 'You can only put even value of money!'
             }
           },
           required: ['number']
