@@ -31,7 +31,8 @@ describe('Dataset', () => {
         default: false
       },
       dateMarried: {
-        type: 'string'
+        type: 'string',
+        format: 'date-time'
       },
       fatherAge: {
         type: 'integer',
@@ -301,11 +302,11 @@ describe('Dataset', () => {
   it('creates mst with values', () => {
     const mst = buildStore(schema);
     const data = mst.create({
-      age: 50,
+      age: 15,
       name: 'Tomas',
-      fatherAge: 20,
+      fatherAge: 50,
       married: true,
-      dateMarried: create.date().toISOString(),
+      dateMarried: create.date(),
       salary: 2300.34,
       address: {
         street: 'Elm street',
@@ -314,16 +315,16 @@ describe('Dataset', () => {
       accounts: [{ number: '111-222', money: 200 }]
     });
 
-    const m = 1;
-    // console.log(create.date new Date(2012, 8, 29, 0, 0, 0, 0).toISOString())
+    const errors = data.validateDataset();
+    expect(errors).toBeFalsy();
 
-    expect(data.toJS()).toMatchSnapshot();
+    expect(data.toJS({ replaceDates: false })).toMatchSnapshot();
   });
 
   it('creates mst with default values', () => {
     const mst = buildStore(schema);
     const defaultData = mst.create({});
-    expect(defaultData.toJS(false)).toMatchSnapshot();
+    expect(defaultData.toJS({ replaceDates: false, replaceEmpty: false })).toMatchSnapshot();
   });
 
   it('validates the root dataset', () => {
@@ -335,6 +336,65 @@ describe('Dataset', () => {
     const d1 = store.create({ name: 'Tomas', age: 39 });
     const errors = d1.validateDataset(); /*?*/
     expect(d1.errors.get('ROOT')).toEqual('should match exactly one schema in oneOf');
+  });
+
+  it('correctly removes "possible" invalid values on successful validation of the whole dataset', () => {
+    config.setDirty = jest.fn();
+    const jSchema: JSONSchema = {
+      type: 'object',
+      properties: { foo: { type: 'string' }, bar: { type: 'string' } }
+    };
+    jSchema.anyOf = [{ required: ['foo'] }, { required: ['bar'] }];
+    const rSchema = new Schema(jSchema);
+    const store = buildStore(rSchema);
+    let d1 = store.create({});
+    d1.validateDataset(); /*?*/
+
+    expect(d1.errors.get('foo')).toEqual('Value is required');
+    expect(d1.errors.get('bar')).toEqual('Value is required');
+
+    d1.setValue('foo', 'foo');
+    d1.validateDataset(); /*?*/
+
+    expect(d1.errors.get('foo')).toBeUndefined();
+    expect(d1.errors.get('bar')).toBeUndefined();
+
+    d1.setValue('foo', '');
+    d1.setValue('bar', 'bar');
+    d1.validateDataset(); /*?*/
+
+    expect(d1.errors.get('foo')).toBeUndefined();
+    expect(d1.errors.get('bar')).toBeUndefined();
+  });
+
+  it('respects validationGroup and correctly removes "possible" invalid values on successful validation', () => {
+    config.setDirty = jest.fn();
+    const jSchema: JSONSchema = {
+      type: 'object',
+      properties: {
+        foo: { type: 'string', validationGroup: '1' },
+        bar: { type: 'string', validationGroup: '1' },
+        dar: { type: 'string' }
+      }
+    };
+    jSchema.anyOf = [{ required: ['foo'] }, { required: ['bar'] }];
+    const rSchema = new Schema(jSchema);
+    const store = buildStore(rSchema);
+    let d1 = store.create({});
+
+    d1.validateDataset();
+    expect(d1.errors.get('foo')).toEqual('Value is required');
+    expect(d1.errors.get('bar')).toEqual('Value is required');
+
+    d1.setValue('foo', 'foo');
+
+    expect(d1.errors.get('foo')).toBe('');
+    expect(d1.errors.get('bar')).toBe('');
+
+    d1.setValue('foo', '');
+
+    expect(d1.errors.get('foo')).toEqual('Value is required');
+    expect(d1.errors.get('bar')).toEqual('Value is required');
   });
 
   it('allows to use expressions', () => {

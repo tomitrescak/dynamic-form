@@ -10,7 +10,7 @@ import { JSONSchemaType, JSONSchema } from './json_schema';
 import { safeEval } from './form_utils';
 import { DataSet } from './form_store';
 
-const defaultAjv = new Ajv({ allErrors: true, useDefaults: true });
+const defaultAjv = new Ajv({ allErrors: true, useDefaults: true, jsonPointers: true });
 initCustomErrors(defaultAjv);
 
 defaultAjv.addKeyword('validationExpression', {
@@ -166,11 +166,29 @@ export class Schema {
     return path;
   }
 
-  static reassignErrors(errors: any[]) {
+  static reassignErrors(errors: any[], schema: JSONSchema) {
     if (!Array.isArray(errors)) {
       return errors;
     }
-    for (let error of errors) {
+
+    for (let i = errors.length - 1; i >= 0; i--) {
+      let error = errors[i];
+
+      // remove string warnings where we use DateTime
+      // this is a very dirty solution but allows me to store dates
+      // in the dataset and ignore validations errors over them
+
+      // if (error.message === 'should be string') {
+      //   let path = error.schemaPath.split('/').slice(1, -1);
+      //   let s: any = schema;
+      //   while (path.length) {
+      //     s = s[path.shift()];
+      //   }
+      //   if (s.format === 'date-time') {
+      //     errors.splice(i, 1);
+      //   }
+      // }
+
       // missing properties are propagated into properties themselves
       // rendering as "value is required"
       if (error.params && error.params.missingProperty) {
@@ -183,7 +201,7 @@ export class Schema {
         }
       }
     }
-    return errors;
+    return errors.length ? errors : undefined;
   }
 
   static parseParent(dataPath: string) {
@@ -199,10 +217,14 @@ export class Schema {
   }
 
   tryParse(value: any) {
+    if (!value) {
+      return value;
+    }
+    if (this.schema.format === 'date-time') {
+      let date = Date.parse(value);
+      return isNaN(date) ? value : new Date(date);
+    }
     switch (this.type) {
-      case 'date':
-        let date = Date.parse(value);
-        return isNaN(date) ? value : new Date(date);
       case 'integer':
         return validations.IntValidator(value) ? value : parseInt(value, 10);
       case 'number':
@@ -232,20 +254,19 @@ export class Schema {
   }
 
   validate(dataset: DataSet) {
-    const cleanData = dataset.toJS ? dataset.toJS() : dataset;
-    // console.log(cleanData);
+    const cleanData = dataset.toJS ? dataset.toJS({ replaceDates: true }) : dataset;
 
     // we use this when executing expressions
     // (this.ajv as any).currentData = cleanData;
 
     if (!this.validator(cleanData) as any) {
-      return Schema.reassignErrors(this.validator.errors);
+      return Schema.reassignErrors(this.validator.errors, this.schema);
     }
     return false;
   }
 
   validateAndAssignErrors(dataset: DataSet) {
-    const cleanData = dataset.toJS();
+    const cleanData = dataset.toJS({ replaceDates: true });
     const errors = this.validate(cleanData);
     if (errors && errors.length) {
       for (let error of errors) {
@@ -255,34 +276,29 @@ export class Schema {
     return errors;
   }
 
-  validateField(value: IAnyStateTreeNode, key: string, assignErrors = false) {
-    // mobx's 'getPath' generates path such as /prop/path/0
-    // we need to convert it to the json schema type path such as.prop.path[0]
-    // const path = Schema.convertPath(getPath(value)) + (key ? '.' + key : '');
-    const path = getPath(value) + (key ? '/' + key : '');
-
-    // console.log('Validating: ' + path);
-
+  validateFields(value: IAnyStateTreeNode, keys: string[], assignErrors = false) {
     // validate the whole dataset from its root
     const root: DataSet = getRoot(value);
     const errors = this.validate(root as DataSet);
 
-    // console.log(path);
-    // console.log(errors);
+    let result = undefined;
+    for (let key of keys) {
+      // mobx's 'getPath' generates path such as /prop/path/0
+      // we need to convert it to the json schema type path such as.prop.path[0]
+      // const path = Schema.convertPath(getPath(value)) + (key ? '.' + key : '');
+      const path = getPath(value) + (key ? '/' + key : '');
 
-    // console.log(root.fatherAge)
-    // console.log(errors);
-
-    // locate the error in the resulting errors by its path
-    if (errors && errors.length) {
-      const error = errors.find(e => e.dataPath === path);
-      if (error) {
-        if (assignErrors) {
-          this.assignErrors(root, error);
+      // locate the error in the resulting errors by its path
+      if (errors && errors.length) {
+        const error = errors.find(e => e.dataPath === path);
+        if (error) {
+          if (assignErrors) {
+            this.assignErrors(root, error);
+          }
+          result = error.message;
         }
-        return error.message;
       }
     }
-    return undefined;
+    return result;
   }
 }

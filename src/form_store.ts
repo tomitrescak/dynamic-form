@@ -1,5 +1,5 @@
 import { observable, toJS } from 'mobx';
-import { types } from 'mobx-state-tree';
+import { types, getRoot } from 'mobx-state-tree';
 import Ajv from 'ajv';
 
 import { Schema } from './data_schema_model';
@@ -17,7 +17,9 @@ export type ValidationResult = {
   total: number;
 };
 
-function strip(obj: any, replaceEmpty: boolean) {
+function strip(obj: any, options: ToJsOptions) {
+  // console.log(options);
+
   if (typeof obj === 'object') {
     if (obj.errors) {
       delete obj.errors;
@@ -27,15 +29,18 @@ function strip(obj: any, replaceEmpty: boolean) {
 
     for (let key of Object.getOwnPropertyNames(obj)) {
       let item = obj[key];
+      if (options.replaceDates && item instanceof Date) {
+        obj[key] = item.toISOString();
+      }
       if (item === '') {
-        if (replaceEmpty) {
+        if (options.replaceEmpty) {
           obj[key] = undefined;
         }
       } else if (typeof item === 'object') {
-        strip(item, replaceEmpty);
+        strip(item, options);
       } else if (Array.isArray(item)) {
         for (let a of item) {
-          strip(a, replaceEmpty);
+          strip(a, options);
         }
       }
     }
@@ -74,6 +79,8 @@ export interface ListValue {
   value: string;
 }
 
+type ToJsOptions = { replaceEmpty?: boolean; replaceDates?: boolean };
+
 // const errors = observable.map({});
 
 export const FormStore = types
@@ -86,14 +93,14 @@ export const FormStore = types
       // allow dot notation for obtaining values
       if (item.indexOf('.') > 0) {
         let [first, ...rest] = item.split('.');
-        return (self as any)[first].getValue(rest);
+        return (self as any)[first].getValue(rest.join('.'));
       }
       return (self as any)[item];
     },
     getError(item: string): string {
       if (item.indexOf('.') > 0) {
         let [first, ...rest] = item.split('.');
-        return (self as any)[first].getError(rest);
+        return (self as any)[first].getError(rest.join('.'));
       }
       return self.errors.get(item);
     }
@@ -139,7 +146,7 @@ export const FormStore = types
       setValue(key: string, value: any): void {
         if (key.indexOf('.') > 0) {
           let [first, ...rest] = key.split('.');
-          return (self as any)[first].setValue(rest, value);
+          return (self as any)[first].setValue(rest.join('.'), value);
         } else {
           // set value for validation
           setValue(key, self.getSchema(key).tryParse(value));
@@ -148,31 +155,70 @@ export const FormStore = types
           this.validateField(key);
         }
       },
-      toJS(replaceEmpty = true) {
-        return strip(toJS(self), replaceEmpty);
+      // clear all errors from the previous validation
+      clearErrors() {
+        self.errors.clear();
+        const schema = self.getSchema();
+
+        for (let key of Object.getOwnPropertyNames(schema.properties)) {
+          let elem = schema.properties[key];
+          if (elem.type === 'object') {
+            self.getValue(key).clearErrors();
+          }
+          if (elem.type === 'array' && elem.items.type === 'object') {
+            for (let row of self.getValue(key)) {
+              row.clearErrors();
+            }
+          }
+        }
+      },
+      toJS({ replaceDates = false, replaceEmpty = true }: ToJsOptions = {}) {
+        return strip(toJS(self), { replaceDates, replaceEmpty });
       },
       toJSString() {
         return JSON.stringify(this.toJS(), null, 2);
       },
       validateDataset(assign = true): false | Ajv.ErrorObject[] {
-        const root = self.getSchema().rootSchema();
+        const rootSchema = self.getSchema().rootSchema();
+
+        // clear previous errors
+        const rootElement: DataSet = getRoot(self);
+        rootElement.clearErrors();
+
         if (assign) {
-          return root.validateAndAssignErrors(self as DataSet);
+          return rootSchema.validateAndAssignErrors(self as DataSet);
         } else {
-          return root.validate(self as DataSet);
+          return rootSchema.validate(self as DataSet);
         }
       },
       validateField(key: string) {
-        // console.log('===============');
+        // find current schema
+        let ownSchema = self.getSchema().schema;
+        let keys = [key];
+        let field = ownSchema.properties[key];
+
+        if (field.validationGroup) {
+          // currently we support validation groups only on the same level
+          for (let property of Object.getOwnPropertyNames(ownSchema.properties)) {
+            if (
+              key !== property &&
+              ownSchema.properties[property].validationGroup === field.validationGroup
+            ) {
+              keys.push(property);
+            }
+          }
+        }
 
         // remove error
-        self.errors.set(key, '');
+        for (let k of keys) {
+          self.errors.set(k, '');
+        }
 
         // get root and validate root
         const schema = self.getSchema().rootSchema();
 
         // const value = (self as any)[key];
-        return schema.validateField(self, key, true);
+        return schema.validateFields(self, keys, true);
       }
     };
   });

@@ -23,6 +23,12 @@ function mstTypeFactory(desc: Schema): any {
         desc.default || []
       );
     case 'string':
+      if (desc.schema.format === 'date-time') {
+        return types.optional(
+          types.union(types.Date, types.string, types.undefined),
+          desc.default || ''
+        );
+      }
       return types.optional(types.union(types.string, types.undefined), desc.default || '');
     case 'integer':
       return types.optional(
@@ -79,7 +85,11 @@ export function buildStore(schema: Schema) {
       if (node.expression) {
         (view as any).__defineGetter__(key, function() {
           // @ts-ignore
-          return safeEval(this, node.expression);
+          const result = safeEval(this, node.expression);
+          if (isNaN(result)) {
+            return '#ERROR#';
+          }
+          return result;
         });
       }
     }

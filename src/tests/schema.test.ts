@@ -55,26 +55,29 @@ describe('Schema', () => {
   describe('reassignErrors', () => {
     it('assigns required field errors as specific errors', () => {
       expect(
-        Schema.reassignErrors([
-          {
-            keyword: 'required',
-            dataPath: '',
-            schemaPath: '#/required',
-            params: {
-              missingProperty: 'name'
+        Schema.reassignErrors(
+          [
+            {
+              keyword: 'required',
+              dataPath: '',
+              schemaPath: '#/required',
+              params: {
+                missingProperty: 'name'
+              },
+              message: "should have required property 'name'"
             },
-            message: "should have required property 'name'"
-          },
-          {
-            keyword: 'required',
-            dataPath: '/accounts/0',
-            schemaPath: '#/properties/accounts/items/required',
-            params: {
-              missingProperty: 'money'
-            },
-            message: "should have required property 'money'"
-          }
-        ])
+            {
+              keyword: 'required',
+              dataPath: '/accounts/0',
+              schemaPath: '#/properties/accounts/items/required',
+              params: {
+                missingProperty: 'money'
+              },
+              message: "should have required property 'money'"
+            }
+          ],
+          null
+        )
       ).toEqual([
         {
           keyword: 'required',

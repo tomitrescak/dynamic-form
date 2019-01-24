@@ -1,4 +1,7 @@
 export function safeEval(t: any, expression: string, value: any = null, parameterName = 'value') {
+  if (expression && expression.indexOf(';') === -1 && !expression.trim().startsWith('return')) {
+    expression = 'return ' + expression;
+  }
   const f = new Function(
     parameterName,
     'eval',
@@ -11,7 +14,7 @@ export function safeEval(t: any, expression: string, value: any = null, paramete
     // 'console',
     'XMLHttpRequest',
     'Function',
-    expression.indexOf(';') > 0 ? expression : 'return ' + expression
+    expression
   );
   return f.call(t, value);
 }

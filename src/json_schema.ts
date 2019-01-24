@@ -33,6 +33,7 @@ export interface JSONSchema {
 
   expression?: string;
   validationExpression?: string;
+  validationGroup?: string;
   properties?: {
     [key: string]: JSONSchema;
   };
@@ -51,6 +52,8 @@ export interface JSONSchema {
   $ref?: string;
   $schema?: JSONSchema7Version;
   $comment?: string;
+  $import?: string;
+  $enum?: Array<{ text: string; value: string; icon?: string }>;
 
   /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-6.2
