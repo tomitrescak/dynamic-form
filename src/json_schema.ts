@@ -26,7 +26,14 @@ export type ErrorMessages = {
 
 export type ErrorMessage = string | ErrorMessages;
 
-export interface JSONSchema {
+export type EnumOption = {
+  [index: string]: string;
+  text: string;
+  value: string;
+  icon?: string;
+};
+
+export class JSONSchemaBase {
   /* =========================================================
       OVERRIDEN
      ======================================================== */
@@ -34,9 +41,7 @@ export interface JSONSchema {
   expression?: string;
   validationExpression?: string;
   validationGroup?: string;
-  properties?: {
-    [key: string]: JSONSchema;
-  };
+
   /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-6.1
    */
@@ -53,7 +58,7 @@ export interface JSONSchema {
   $schema?: JSONSchema7Version;
   $comment?: string;
   $import?: string;
-  $enum?: Array<{ text: string; value: string; icon?: string }>;
+  $enum?: EnumOption[];
 
   /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-6.2
@@ -74,7 +79,7 @@ export interface JSONSchema {
   /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-6.4
    */
-  items?: JSONSchema | JSONSchema[];
+
   additionalItems?: JSONSchema;
   maxItems?: number;
   minItems?: number;
@@ -86,7 +91,6 @@ export interface JSONSchema {
    */
   maxProperties?: number;
   minProperties?: number;
-  required?: string[];
 
   patternProperties?: {
     [key: string]: JSONSchema;
@@ -140,4 +144,12 @@ export interface JSONSchema {
   readOnly?: boolean;
   writeOnly?: boolean;
   examples?: JSONSchema7Type;
+}
+
+export class JSONSchema extends JSONSchemaBase {
+  properties?: {
+    [key: string]: JSONSchema;
+  };
+  items?: JSONSchema | JSONSchema[];
+  required?: string[];
 }

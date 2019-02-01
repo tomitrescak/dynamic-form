@@ -6,7 +6,7 @@ import Ajv from 'ajv';
 
 import { getRoot, getPath, IAnyStateTreeNode } from 'mobx-state-tree';
 
-import { JSONSchemaType, JSONSchema } from './json_schema';
+import { JSONSchemaType, JSONSchema, JSONSchemaBase } from './json_schema';
 import { safeEval } from './form_utils';
 import { DataSet } from './form_store';
 
@@ -61,41 +61,36 @@ type SchemaOptions = {
   ajv?: Ajv.Ajv;
 };
 
-export class Schema {
+export class Schema extends JSONSchemaBase {
   // store: typeof FormStore.Type;
   parent: Schema;
   properties: { [index: string]: Schema };
   items: Schema;
-  type: JSONSchemaType;
-  default: any;
   required: boolean;
   readOnly: boolean;
-  validationMessage: string;
-  expression: string;
   enum: ListItem[];
   key: string;
-  schema: JSONSchema;
+  default: any;
 
   validator: Ajv.ValidateFunction;
-  ajv: Ajv.Ajv;
 
   constructor(
     schema: JSONSchema,
-    { parent = null, required = false, key = null, ajv = defaultAjv }: SchemaOptions = {}
+    { parent = null, required = false, key = null }: SchemaOptions = {}
   ) {
+    super();
+
+    Object.assign(this, schema);
+
     this.parent = parent;
-    this.schema = schema;
     this.expression = schema.expression;
     this.key = key;
 
     // we do not need validator for end nodes
     // these are always validated from the parent
     if (schema.properties) {
-      this.ajv = ajv;
-      this.validator = this.ajv.compile(schema);
+      this.validator = defaultAjv.compile(schema);
     }
-
-    this.init(schema, ['readOnly', 'type', 'required', 'default', 'validationMessage', 'enum']);
 
     if (required) {
       this.required = required;
@@ -103,6 +98,9 @@ export class Schema {
 
     if (schema.type === 'object') {
       this.properties = {};
+      if (!schema.properties) {
+        throw new Error('Schema does not define any properties!');
+      }
       for (let key of Object.getOwnPropertyNames(schema.properties)) {
         this.properties[key] = new Schema(schema.properties[key] as JSONSchema, {
           parent: this,
@@ -166,7 +164,7 @@ export class Schema {
     return path;
   }
 
-  static reassignErrors(errors: any[], schema: JSONSchema) {
+  static reassignErrors(errors: any[], schema: JSONSchemaBase) {
     if (!Array.isArray(errors)) {
       return errors;
     }
@@ -220,7 +218,7 @@ export class Schema {
     if (!value) {
       return value;
     }
-    if (this.schema.format === 'date-time') {
+    if (this.format === 'date-time') {
       let date = Date.parse(value);
       return isNaN(date) ? value : new Date(date);
     }
@@ -260,7 +258,7 @@ export class Schema {
     // (this.ajv as any).currentData = cleanData;
 
     if (!this.validator(cleanData) as any) {
-      return Schema.reassignErrors(this.validator.errors, this.schema);
+      return Schema.reassignErrors(this.validator.errors, this);
     }
     return false;
   }
@@ -278,7 +276,7 @@ export class Schema {
 
   validateFields(value: IAnyStateTreeNode, keys: string[], assignErrors = false) {
     // validate the whole dataset from its root
-    const root: DataSet = getRoot(value);
+    const root: DataSet = getRoot(value) as any;
     const errors = this.validate(root as DataSet);
 
     let result = undefined;

@@ -13,17 +13,13 @@ function shortId() {
 
 function mstTypeFactory(desc: Schema): any {
   switch (desc.type) {
-    case 'id':
-      return types.optional(types.identifier, shortId);
-    case 'expression':
-      return undefined;
     case 'array':
       return types.optional(
         types.array(types.optional(mstTypeFactory(desc.items), desc.items.defaultValue)),
         desc.default || []
       );
     case 'string':
-      if (desc.schema.format === 'date-time') {
+      if (desc.format === 'date-time') {
         return types.optional(
           types.union(types.Date, types.string, types.undefined),
           desc.default || ''
@@ -38,11 +34,6 @@ function mstTypeFactory(desc: Schema): any {
     case 'number':
       return types.optional(
         types.union(types.number, types.string, types.undefined),
-        desc.default || ''
-      );
-    case 'date':
-      return types.optional(
-        types.union(types.Date, types.string, types.undefined),
         desc.default || ''
       );
     case 'boolean':

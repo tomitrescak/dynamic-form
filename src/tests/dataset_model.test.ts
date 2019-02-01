@@ -296,7 +296,7 @@ describe('Dataset', () => {
       'You can only put even value of money!'
     );
 
-    data.getSchema('fatherAge').validationMessage = null;
+    data.getSchema('fatherAge').errorMessage = null;
   });
 
   it('creates mst with values', () => {

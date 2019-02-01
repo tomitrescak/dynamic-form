@@ -1,5 +1,5 @@
 import { observable, toJS } from 'mobx';
-import { types, getRoot } from 'mobx-state-tree';
+import { types, getRoot, getParent } from 'mobx-state-tree';
 import Ajv from 'ajv';
 
 import { Schema } from './data_schema_model';
@@ -90,6 +90,9 @@ export const FormStore = types
   }))
   .views(self => ({
     getValue(item: string): any {
+      if (!item) {
+        return self;
+      }
       // allow dot notation for obtaining values
       if (item.indexOf('.') > 0) {
         let [first, ...rest] = item.split('.');
@@ -117,7 +120,9 @@ export const FormStore = types
     function setValue(key: string, value: any) {
       if (store[key] !== value) {
         store[key] = value;
-        config.setDirty(true);
+        if (config.setDirty) {
+          config.setDirty(true);
+        }
       }
     }
 
@@ -178,12 +183,21 @@ export const FormStore = types
       toJSString() {
         return JSON.stringify(this.toJS(), null, 2);
       },
+      root() {
+        if (getRoot(self) == self) {
+          return self;
+        }
+        let parent = getParent(self) as any;
+        if (parent && parent.clearErrors) {
+          return parent.root();
+        }
+        return self;
+      },
       validateDataset(assign = true): false | Ajv.ErrorObject[] {
         const rootSchema = self.getSchema().rootSchema();
 
         // clear previous errors
-        const rootElement: DataSet = getRoot(self);
-        rootElement.clearErrors();
+        this.root().clearErrors();
 
         if (assign) {
           return rootSchema.validateAndAssignErrors(self as DataSet);
@@ -193,7 +207,7 @@ export const FormStore = types
       },
       validateField(key: string) {
         // find current schema
-        let ownSchema = self.getSchema().schema;
+        let ownSchema = self.getSchema();
         let keys = [key];
         let field = ownSchema.properties[key];
 

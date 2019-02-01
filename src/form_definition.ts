@@ -1,6 +1,7 @@
 export type FormControl =
   | 'ApproveButton'
   | 'Checkbox'
+  | 'Comment'
   | 'DeleteButton'
   | 'Form'
   | 'Formula'

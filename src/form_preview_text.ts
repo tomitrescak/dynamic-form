@@ -22,17 +22,24 @@ export class FormPreviewText {
     const value = dataSet.getValue(formElement.source);
 
     switch (formElement.control) {
+      case 'Image':
+        return formElement.url;
+      case 'ApproveButton':
+      case 'RejectButton':
+      case 'Comment':
+      case 'Text':
+        return '';
+      case 'Textarea':
       case 'Formula':
       case 'Input':
-      case 'Text':
         return value;
       case 'Select': {
         let { source, controlProps, list, filterSource, filterColumn } = formElement;
         const options = filterSource
           ? dataSet
               .getSchema(list)
-              .enum.filter((v: any) => v[filterColumn] === dataSet.getValue(filterSource))
-          : dataSet.getSchema(list).enum; /*?*/
+              .$enum.filter((v: any) => v[filterColumn] === dataSet.getValue(filterSource))
+          : dataSet.getSchema(list).$enum; /*?*/
 
         const text = options.find(o => o.value === value).text;
         return text;
@@ -82,12 +89,17 @@ export class FormPreviewText {
     let columns = [];
     const formControl = control;
 
-    let label = formControl.label ? `${formControl.label}: ` : '';
+    let label =
+      formControl.control === 'Text'
+        ? `\n${formControl.label}`
+        : formControl.label
+        ? `${formControl.label.trim()}: `
+        : '';
 
     if (formControl.elements && formControl.elements.length) {
-      columns.push(`\n== Start${formControl.label && ': ' + formControl.label} ==
+      columns.push(`\n== Start${label} ==
 ${this.renderControl(control, owner)}
-== End${formControl.label && ': ' + formControl.label} ==`);
+== End${label} ==`);
     } else {
       columns.push(`${label}${this.renderControl(control, owner)}`);
     }

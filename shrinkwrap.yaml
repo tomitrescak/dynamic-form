@@ -1,16 +1,17 @@
 dependencies:
   '@tomino/toolbelt': 'link:../toolbelt'
   ajv: 6.7.0
+  ajv-errors: 1.0.1
   deepmerge: 3.1.0
 devDependencies:
-  '@types/jest': 23.3.12
+  '@types/jest': 23.3.13
   jest: 23.6.0
   jest-cli: 23.6.0
-  mobx: 5.8.0
-  mobx-state-tree: 3.10.0
-  mst-middlewares: 3.10.0
+  mobx: 5.9.0
+  mobx-state-tree: 3.10.2
+  mst-middlewares: 3.10.2
   ts-jest: 23.10.5
-  typescript: 3.2.2
+  typescript: 3.2.4
 packages:
   /@babel/code-frame/7.0.0:
     dependencies:
@@ -26,17 +27,17 @@ packages:
     dev: true
     resolution:
       integrity: sha512-UFMC4ZeFC48Tpvj7C8UgLvtkaUuovQX+5xNWrsIoMG8o2z+XFKjKaN9iVmS84dPwVN00W4wPmqvYoZF3EGAsfw==
-  /@types/jest/23.3.12:
+  /@types/jest/23.3.13:
     dev: true
     resolution:
-      integrity: sha512-/kQvbVzdEpOq4tEWT79yAHSM4nH4xMlhJv2GrLVQt4Qmo8yYsPdioBM1QpN/2GX1wkfMnyXvdoftvLUr0LBj7Q==
+      integrity: sha512-ePl4l+7dLLmCucIwgQHAgjiepY++qcI6nb8eAwGNkB6OxmTe3Z9rQU3rSpomqu42PCCnlThZbOoxsf+qylJsLA==
   /abab/2.0.0:
     dev: true
     resolution:
       integrity: sha512-sY5AXXVZv4Y1VACTtR11UJCPHHudgY5i26Qj5TypE6DKlIApbwb5uqhXcJ5UUGbvZNRh7EeIoW+LrJumBsKp7w==
   /acorn-globals/4.3.0:
     dependencies:
-      acorn: 6.0.5
+      acorn: 6.0.6
       acorn-walk: 6.1.1
     dev: true
     resolution:
@@ -54,13 +55,19 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-T/zvzYRfbVojPWahDsE5evJdHb3oJoQfFbsrKM7w5Zcs++Tr257tia3BmMP8XYVjp1S9RZXQMh7gao96BlqZOw==
-  /acorn/6.0.5:
+  /acorn/6.0.6:
     dev: true
     engines:
       node: '>=0.4.0'
     hasBin: true
     resolution:
-      integrity: sha512-i33Zgp3XWtmZBMNvCr4azvOFeWVw1Rk6p3hfi3LUDvIFraOMywb1kAtrbi+med14m4Xfpqm3zRZMT+c0FNE7kg==
+      integrity: sha512-5M3G/A4uBSMIlfJ+h9W125vJvPFH/zirISsW5qfxF5YzEvXJCtolLoQvM5yZft0DvMcUrPGKPOlgEu55I6iUtA==
+  /ajv-errors/1.0.1:
+    dev: false
+    peerDependencies:
+      ajv: '>=5.0.0'
+    resolution:
+      integrity: sha512-DCRfO/4nQ+89p/RK43i8Ezd41EqdGIU4ld7nGF8OQ14oc/we5rEntLCUa7+jrn3nn83BosfwZA0wb4pon2o8iQ==
   /ajv/6.7.0:
     dependencies:
       fast-deep-equal: 2.0.1
@@ -69,12 +76,12 @@ packages:
       uri-js: 4.2.2
     resolution:
       integrity: sha512-RZXPviBTtfmtka9n9sy1N5M5b82CbxWIR6HIis4s3WQTXDJamc/0gpCWNGz6EWdWp4DOfjzJfhz/AS9zVPjjWg==
-  /ansi-escapes/3.1.0:
+  /ansi-escapes/3.2.0:
     dev: true
     engines:
       node: '>=4'
     resolution:
-      integrity: sha512-UgAb8H9D41AQnu/PbWlCofQVcnV4Gs2bBJi9eZPxfU/hgglFh3SMDMENRIqdr7H6XFnXdoknctFByVsCOotTVw==
+      integrity: sha512-cBhpre4ma+U0T1oM5fXg7Dy1Jw7zzwv7lt/GoCpr+hDQJoYnKVPLL4dCvSEFMmQurOQvSrwT7SL/DAlhBI97RQ==
   /ansi-regex/2.1.1:
     dev: true
     engines:
@@ -320,7 +327,7 @@ packages:
     dependencies:
       babel-core: 6.26.3
       babel-runtime: 6.26.0
-      core-js: 2.6.2
+      core-js: 2.6.3
       home-or-tmp: 2.0.0
       lodash: 4.17.11
       mkdirp: 0.5.1
@@ -330,7 +337,7 @@ packages:
       integrity: sha1-btAhFz4vy0htestFxgCahW9kcHE=
   /babel-runtime/6.26.0:
     dependencies:
-      core-js: 2.6.2
+      core-js: 2.6.3
       regenerator-runtime: 0.11.1
     dev: true
     resolution:
@@ -459,12 +466,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-MQcXEUbCKtEo7bhqEs6560Hyd4XaovZlO/k9V3hjVUF/zwW7KBVdSK4gIt/bzwS9MbR5qob+F5jusZsb0YQK2A==
-  /builtin-modules/1.1.1:
+  /builtin-modules/3.0.0:
     dev: true
     engines:
-      node: '>=0.10.0'
+      node: '>=6'
     resolution:
-      integrity: sha1-Jw8HbFpywC9bZaR9+Uxf46J4iS8=
+      integrity: sha512-hMIeU4K2ilbXV6Uv93ZZ0Avg/M91RaKXucQ+4me2Do1txxBDyDZWCBa5bJSLqoNTRpXTLwEzIk1KmloenDDjhg==
   /cache-base/1.0.1:
     dependencies:
       collection-visit: 1.0.0
@@ -613,10 +620,10 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-Z29us8OZl8LuGsOpJP1hJHSPV40=
-  /core-js/2.6.2:
+  /core-js/2.6.3:
     dev: true
     resolution:
-      integrity: sha512-NdBPF/RVwPW6jr0NCILuyN9RiqLo2b1mddWHkUL+VnvcB7dzlnBJ1bXYntjpTGOgkZiiLWj2JxmOr7eGE3qK6g==
+      integrity: sha512-l00tmFFZOBHtYhN4Cz7k32VM7vTn3rE2ANjQDxdEN6zmXZ/xq1jQuutnmHvMG1ZJ7xd72+TA5YpUK8wz3rWsfQ==
   /core-util-is/1.0.2:
     dev: true
     resolution:
@@ -1274,7 +1281,7 @@ packages:
     dependencies:
       assert-plus: 1.0.0
       jsprim: 1.4.1
-      sshpk: 1.16.0
+      sshpk: 1.16.1
     dev: true
     engines:
       node: '>=0.8'
@@ -1358,14 +1365,14 @@ packages:
     dev: true
     resolution:
       integrity: sha512-NcdALwpXkTm5Zvvbk7owOUSvVvBKDgKP5/ewfXEznmQFfs4ZRmanOeKBTjRVjka3QFoN6XJ+9F3USqfHqTaU5w==
-  /is-builtin-module/1.0.0:
+  /is-builtin-module/3.0.0:
     dependencies:
-      builtin-modules: 1.1.1
+      builtin-modules: 3.0.0
     dev: true
     engines:
-      node: '>=0.10.0'
+      node: '>=6'
     resolution:
-      integrity: sha1-VAVy0096wxGfj3bDDLwbHgN6/74=
+      integrity: sha512-/93sDihsAD652hrMEbJGbMAVBf1qc96kyThHQ0CAOONHaE3aROLpTjDe4WQ5aoC5ITHFxEq1z8XqSU7km+8amw==
   /is-callable/1.1.4:
     dev: true
     engines:
@@ -1666,7 +1673,7 @@ packages:
       integrity: sha512-EyNhTAUWEfwnK0Is/09LxoqNDOn7mU7S3EHskG52djOFS/z+IT0jT3h3Ql61+dklcG7bJJitIWEMB4Sp1piHmA==
   /jest-cli/23.6.0:
     dependencies:
-      ansi-escapes: 3.1.0
+      ansi-escapes: 3.2.0
       chalk: 2.4.2
       exit: 0.1.2
       glob: 7.1.3
@@ -1884,7 +1891,7 @@ packages:
       realpath-native: 1.0.2
       slash: 1.0.0
       strip-bom: 3.0.0
-      write-file-atomic: 2.3.0
+      write-file-atomic: 2.4.2
       yargs: 11.1.0
     dev: true
     hasBin: true
@@ -1933,7 +1940,7 @@ packages:
       integrity: sha512-OFKapYxe72yz7agrDAWi8v2WL8GIfVqcbKRCLbRG9PAxtzF9b1SEDdTpytNDN12z2fJynoBwpMpvj2R39plI2A==
   /jest-watcher/23.4.0:
     dependencies:
-      ansi-escapes: 3.1.0
+      ansi-escapes: 3.2.0
       chalk: 2.4.2
       string-length: 2.0.0
     dev: true
@@ -2292,16 +2299,16 @@ packages:
     hasBin: true
     resolution:
       integrity: sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=
-  /mobx-state-tree/3.10.0:
+  /mobx-state-tree/3.10.2:
     dev: true
     peerDependencies:
       mobx: '>=4.8.0 <5.0.0 || >=5.8.0 <6.0.0'
     resolution:
-      integrity: sha512-CEOZRx8wOSwEI7cYiD+kvPrAtpDB5VNpWVWL11mCXljx8WE9Ec6nwL/xZRYMZVFRvxvAoSFS9VqmVDiUHAZ1LA==
-  /mobx/5.8.0:
+      integrity: sha512-DCt05qayAaLEMldsNYicJiLUg5rFyEzivlD4oiy8HjTQ+M3aqRbgvz9kn0g1uR/5IT27jPMkAZO8MSICDGitDw==
+  /mobx/5.9.0:
     dev: true
     resolution:
-      integrity: sha512-NsZB+9bF5j+nv9Qwk6bNeE3np26a4TbTGkMpOLf6o1zXoM9BtHPQn/00px4uZ2AXJXtQML5P4MEWdMm6icMIfQ==
+      integrity: sha512-D3mY1uM3H9BP5duk5tTanrOq92yqetYKsprPJWvkKDrbs+fro59xrpWX+vtr10YoLgJIFz+a4A8lI+4YtqmCUQ==
   /ms/2.0.0:
     dev: true
     resolution:
@@ -2310,12 +2317,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-tgp+dl5cGk28utYktBsrFqA7HKgrhgPsg6Z/EfhWI4gl1Hwq8B/GmY/0oXZ6nF8hDVesS/FpnYaD/kOWhYQvyg==
-  /mst-middlewares/3.10.0:
+  /mst-middlewares/3.10.2:
     dev: true
     peerDependencies:
       mobx-state-tree: ^3.5.0
     resolution:
-      integrity: sha512-ZBe+dZ0S4695TMebfZXmK9RDhdnnm2lHrpGXjiFPkKC6rZzS+o8AfDkrRrEo5+Zzkq6VZJryyHgtdxgPrXb8hA==
+      integrity: sha512-P9J3g0a5idBVW2mcBSWY/TZ6nY5Ml42+Y4Rmx0Hc3LxXoqk4zOHXHXyerffX07jd+5/EoYS/ZQU9uanxHQ/nVQ==
   /nan/2.12.1:
     dev: true
     optional: true
@@ -2356,15 +2363,15 @@ packages:
     dev: true
     resolution:
       integrity: sha512-AhENzCSGZnZJgBARsUjnQ7DnZbzyP+HxlVXuD0xqAnvL8q+OqtSX7lGg9e8nHzwXkMMXNdVeqq4E2M3EUAqX6Q==
-  /normalize-package-data/2.4.0:
+  /normalize-package-data/2.4.1:
     dependencies:
       hosted-git-info: 2.7.1
-      is-builtin-module: 1.0.0
+      is-builtin-module: 3.0.0
       semver: 5.6.0
       validate-npm-package-license: 3.0.4
     dev: true
     resolution:
-      integrity: sha512-9jjUFbTPfEy3R/ad/2oNbKtW9Hgovl5O1FvFWKkKblNXoN/Oou6+9+KKohPK13Yc3/TyunyWhJp6gvRNR/PPAw==
+      integrity: sha512-ZVuHxWJv1bopjv/SD5uPhgwUhLqxdJ+SsdUQbGR9HWlXrvnd/C08Cn9Bq48PbvX3y5V97GIpAHpL5Bk9BwChGg==
   /normalize-path/2.1.1:
     dependencies:
       remove-trailing-separator: 1.1.0
@@ -2721,7 +2728,7 @@ packages:
   /read-pkg/1.1.0:
     dependencies:
       load-json-file: 1.1.0
-      normalize-package-data: 2.4.0
+      normalize-package-data: 2.4.1
       path-type: 1.1.0
     dev: true
     engines:
@@ -2878,12 +2885,12 @@ packages:
     dev: true
     resolution:
       integrity: sha1-IDEU2CrSxe2ejgQRs5ModeiJ6Xs=
-  /resolve/1.9.0:
+  /resolve/1.10.0:
     dependencies:
       path-parse: 1.0.6
     dev: true
     resolution:
-      integrity: sha512-TZNye00tI67lwYvzxCxHGjwTNlUV70io54/Ed4j6PscB8xVfuBJpRenI/o6dVk0cY0PYTY27AgCoGGxRnYuItQ==
+      integrity: sha512-3sUr9aq5OfSg2S9pNtPA9hL1FVEAjvfOC4leW0SNf/mpnaakz2a9femSd6LqAww2RaFctwyf1lCqnTHuF1rxDg==
   /ret/0.1.15:
     dev: true
     engines:
@@ -3108,7 +3115,7 @@ packages:
     dev: true
     resolution:
       integrity: sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
-  /sshpk/1.16.0:
+  /sshpk/1.16.1:
     dependencies:
       asn1: 0.2.4
       assert-plus: 1.0.0
@@ -3124,7 +3131,7 @@ packages:
       node: '>=0.10.0'
     hasBin: true
     resolution:
-      integrity: sha512-Zhev35/y7hRMcID/upReIvRse+I9SVhyVre/KTJSJQWMz3C3+G+HpO7m1wK/yckEtujKZ7dS4hkVxAnmHaIGVQ==
+      integrity: sha512-HXXqVUq7+pcKeLqqZj6mHFUMvXtOJt1uoUx09pFW6011inTMxqI8BA8PM95myrIyyKwdnzjdFjLiE6KBPVtJIg==
   /stack-utils/1.0.2:
     dev: true
     engines:
@@ -3342,7 +3349,7 @@ packages:
       json5: 2.1.0
       make-error: 1.3.5
       mkdirp: 0.5.1
-      resolve: 1.9.0
+      resolve: 1.10.0
       semver: 5.6.0
       yargs-parser: 10.1.0
     dev: true
@@ -3371,13 +3378,13 @@ packages:
       node: '>= 0.8.0'
     resolution:
       integrity: sha1-WITKtRLPHTVeP7eE8wgEsrUg23I=
-  /typescript/3.2.2:
+  /typescript/3.2.4:
     dev: true
     engines:
       node: '>=4.2.0'
     hasBin: true
     resolution:
-      integrity: sha512-VCj5UiSyHBjwfYacmDuc/NOk4QQixbE+Wn7MFJuS0nRuPQbof132Pw4u53dm264O8LPc2MVsc7RJNml5szurkg==
+      integrity: sha512-0RNDbSdEokBeEAkgNbxJ+BLwSManFy9TeXz8uW+48j/xhEXv1ePME60olyzw2XzUqUBNAYFeJadIqAgNqIACwg==
   /uglify-js/3.4.9:
     dependencies:
       commander: 2.17.1
@@ -3543,14 +3550,14 @@ packages:
     dev: true
     resolution:
       integrity: sha1-tSQ9jz7BqjXxNkYFvA0QNuMKtp8=
-  /write-file-atomic/2.3.0:
+  /write-file-atomic/2.4.2:
     dependencies:
       graceful-fs: 4.1.15
       imurmurhash: 0.1.4
       signal-exit: 3.0.2
     dev: true
     resolution:
-      integrity: sha512-xuPeK4OdjWqtfi59ylvVL0Yn35SF3zgcAcv7rBPFHVaEapaDr4GdGgm3j7ckTwH9wHL7fGmgfAnb0+THrHb8tA==
+      integrity: sha512-s0b6vB3xIVRLWywa6X9TOMA7k9zio0TMOsl9ZnDkliA/cfJlpHXAscj0gbHVJiTdIuAYpIyqS5GW91fqm6gG5g==
   /ws/5.2.2:
     dependencies:
       async-limiter: 1.0.0
@@ -3605,6 +3612,7 @@ specifiers:
   '@tomino/toolbelt': ^1.0.4
   '@types/jest': ^23.3.10
   ajv: ^6.7.0
+  ajv-errors: ^1.0.1
   deepmerge: ^3.1.0
   jest: ^23.6.0
   jest-cli: ^23.6.0
