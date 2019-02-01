@@ -32,6 +32,7 @@ export interface FormElement {
   label?: string;
   inline?: boolean;
   list?: string;
+  readOnly?: boolean;
   filterSource?: string;
   filterColumn?: string;
   control?: FormControl;
