@@ -15,6 +15,7 @@ export type FormControl =
   | 'Table'
   | 'Text'
   | 'Textarea'
+  | 'EditorCell'
   | 'Value';
 
 export interface FormDefinition {
@@ -31,6 +32,7 @@ export interface FormElement {
   sourceRef?: string;
   label?: string;
   inline?: boolean;
+  parent?: FormElement;
   list?: string;
   readOnly?: boolean;
   filterSource?: string;
