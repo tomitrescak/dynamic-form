@@ -1,7 +1,7 @@
 {
   "name": "@tomino/dynamic-form",
   "private": false,
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Dynamic form harnessing power of mobx-state-tree and JSON schema",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,21 +24,21 @@
   },
   "homepage": "https://github.com/tomitrescak/dynamic-form#readme",
   "devDependencies": {
-    "@types/jest": "^23.3.10",
-    "jest": "^23.6.0",
-    "jest-cli": "^23.6.0",
-    "mobx": "^5.7.0",
-    "mobx-state-tree": "^3.9.0",
-    "mst-middlewares": "^3.9.0",
-    "ts-jest": "^23.10.5",
-    "typescript": "^3.2.2"
+    "@types/jest": "*",
+    "jest": "*",
+    "jest-cli": "*",
+    "mobx": "*",
+    "mobx-state-tree": "*",
+    "mst-middlewares": "*",
+    "ts-jest": "*",
+    "typescript": "*"
   },
   "jest": {
     "preset": "ts-jest/presets/default",
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@tomino/toolbelt": "^1.0.4",
+    "@tomino/toolbelt": "*",
     "ajv": "^6.7.0",
     "ajv-errors": "^1.0.1",
     "deepmerge": "^3.1.0"

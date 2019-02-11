@@ -2,20 +2,27 @@ export type FormControl =
   | 'ApproveButton'
   | 'Checkbox'
   | 'Comment'
+  | 'Date'
+  | 'DateRange'
+  | 'DateTime'
   | 'DeleteButton'
+  | 'EditorCell'
   | 'Form'
   | 'Formula'
   | 'Image'
   | 'Input'
+  | 'Modal'
   | 'Radio'
   | 'RejectButton'
   | 'Repeater'
+  | 'Search'
   | 'Select'
   | 'Signature'
+  | 'SubmitButton'
   | 'Table'
   | 'Text'
   | 'Textarea'
-  | 'EditorCell'
+  | 'Time'
   | 'Value';
 
 export interface FormDefinition {
@@ -31,6 +38,8 @@ export interface FormElement {
   source?: string;
   sourceRef?: string;
   label?: string;
+  renderer?: string;
+  handler?: string;
   inline?: boolean;
   parent?: FormElement;
   list?: string;

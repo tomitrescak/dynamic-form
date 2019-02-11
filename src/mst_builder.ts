@@ -21,24 +21,27 @@ function mstTypeFactory(desc: Schema): any {
     case 'string':
       if (desc.format === 'date-time') {
         return types.optional(
-          types.union(types.Date, types.string, types.undefined),
+          types.union(types.Date, types.string, types.undefined, types.null),
           desc.default || ''
         );
       }
-      return types.optional(types.union(types.string, types.undefined), desc.default || '');
+      return types.optional(
+        types.union(types.string, types.undefined, types.null),
+        desc.default || ''
+      );
     case 'integer':
       return types.optional(
-        types.union(types.number, types.string, types.undefined),
+        types.union(types.number, types.string, types.undefined, types.null),
         desc.default || ''
       );
     case 'number':
       return types.optional(
-        types.union(types.number, types.string, types.undefined),
+        types.union(types.number, types.string, types.undefined, types.null),
         desc.default || ''
       );
     case 'boolean':
       return types.optional(
-        types.union(types.boolean, types.string, types.undefined),
+        types.union(types.boolean, types.string, types.undefined, types.null),
         desc.default || ''
       );
     case 'object':

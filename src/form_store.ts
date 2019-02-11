@@ -20,7 +20,7 @@ export type ValidationResult = {
 function strip(obj: any, options: ToJsOptions) {
   // console.log(options);
 
-  if (typeof obj === 'object') {
+  if (obj && typeof obj === 'object') {
     if (obj.errors) {
       delete obj.errors;
       delete obj.inversePatches;
@@ -32,7 +32,7 @@ function strip(obj: any, options: ToJsOptions) {
       if (options.replaceDates && item instanceof Date) {
         obj[key] = item.toISOString();
       }
-      if (item === '') {
+      if (item === '' || item === null) {
         if (options.replaceEmpty) {
           obj[key] = undefined;
         }
