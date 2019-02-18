@@ -127,7 +127,7 @@ export function buildStore(schema: Schema) {
             property = property.properties[first];
             if (!property) {
               throw new Error(
-                `Could not find key ${first} for key ${key} in schema with properties [${Object.getOwnPropertyNames(
+                `Could not find key '${first}' for key '${key}' in schema with properties [${Object.getOwnPropertyNames(
                   schema.properties
                 ).join(',')}]`
               );
@@ -139,7 +139,7 @@ export function buildStore(schema: Schema) {
         const value = key ? schema.properties[key] : schema;
         if (!value) {
           throw new Error(
-            `Could not find key ${key} in schema with properties [${Object.getOwnPropertyNames(
+            `Could not find key '${key}' in schema with properties [${Object.getOwnPropertyNames(
               schema.properties
             ).join(',')}]`
           );

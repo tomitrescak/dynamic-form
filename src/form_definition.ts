@@ -12,6 +12,7 @@ export type FormControl =
   | 'Image'
   | 'Input'
   | 'Modal'
+  | 'Menu'
   | 'Radio'
   | 'RejectButton'
   | 'Repeater'

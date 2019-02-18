@@ -93,16 +93,25 @@ export const FormStore = types
       if (!item) {
         return self;
       }
+      let s: any = self;
       // allow dot notation for obtaining values
       if (item.indexOf('.') > 0) {
         let [first, ...rest] = item.split('.');
-        return (self as any)[first].getValue(rest.join('.'));
+        if (Array.isArray(s[first])) {
+          return rest.length > 1
+            ? s[first][parseInt(rest[0])].getValue(rest.slice(1).join('.'))
+            : s[first][parseInt(rest[0])];
+        }
+        return s[first].getValue(rest.join('.'));
       }
-      return (self as any)[item];
+      return s[item];
     },
     getError(item: string): string {
       if (item.indexOf('.') > 0) {
         let [first, ...rest] = item.split('.');
+        if (Array.isArray(self)) {
+          return self[parseInt(rest[0])].getError(rest.slice(1).join('.'));
+        }
         return (self as any)[first].getError(rest.join('.'));
       }
       return self.errors.get(item);
