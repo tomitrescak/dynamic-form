@@ -107,12 +107,13 @@ export const FormStore = types
       return s[item];
     },
     getError(item: string): string {
+      let s: any = self;
       if (item.indexOf('.') > 0) {
         let [first, ...rest] = item.split('.');
-        if (Array.isArray(self)) {
-          return self[parseInt(rest[0])].getError(rest.slice(1).join('.'));
+        if (Array.isArray(s[first])) {
+          return s[first][parseInt(rest[0])].getError(rest.slice(1).join('.'));
         }
-        return (self as any)[first].getError(rest.join('.'));
+        return s[first].getError(rest.join('.'));
       }
       return self.errors.get(item);
     }
