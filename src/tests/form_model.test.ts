@@ -199,7 +199,7 @@ describe('Preview', () => {
           },
           select: {
             type: 'string',
-            enum: [
+            $enum: [
               { text: 'Sydney', value: '0' },
               { text: 'Melbourne', value: '1' },
               { text: 'Kosice', value: '2' },
@@ -208,7 +208,7 @@ describe('Preview', () => {
           },
           radio: {
             type: 'string',
-            enum: [
+            $enum: [
               { text: 'Tomas', value: '0' },
               { text: 'Michal', value: '1' },
               { text: 'Jana', value: '2' },
@@ -339,7 +339,8 @@ describe('Preview', () => {
     preview = model.createTextPreview();
     expect(preview).toBe(`Input Label: 1
 Formula Label: 5
-Text Label: My Text
+
+Text Label
 Select Label: Kosice
 Check Yes: Yes
 Check No: No

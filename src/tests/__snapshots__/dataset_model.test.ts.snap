@@ -42,6 +42,19 @@ Object {
 }
 `;
 
+exports[`Dataset creates mst with recursive definitions values 1`] = `
+Object {
+  "father": Object {
+    "father": Object {
+      "father": undefined,
+      "name": "Michal Sr",
+    },
+    "name": "Michal Jr",
+  },
+  "name": "Tomas",
+}
+`;
+
 exports[`Dataset creates mst with values 1`] = `
 Object {
   "accounts": Array [

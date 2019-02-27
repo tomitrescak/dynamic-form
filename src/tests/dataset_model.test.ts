@@ -327,6 +327,27 @@ describe('Dataset', () => {
     expect(defaultData.toJS({ replaceDates: false, replaceEmpty: false })).toMatchSnapshot();
   });
 
+  it('creates mst with recursive definitions values', () => {
+    const recursiveSchema: JSONSchema = {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        father: { $ref: '#' },
+        friends: {
+          type: 'array',
+          items: { $ref: '#' }
+        }
+      }
+    };
+    const mst = buildStore(new Schema(recursiveSchema));
+    const defaultData = mst.create({
+      name: 'Tomas',
+      father: { name: 'Michal Jr', father: { name: 'Michal Sr' } },
+      friends: [{ name: 'Tomas' }, { name: 'Harry' }]
+    });
+    expect(defaultData.toJS({ replaceDates: false, replaceEmpty: false })).toBe('');
+  });
+
   it('validates the root dataset', () => {
     const jSchema = jsonSchema();
     jSchema.oneOf = [{ required: ['name'] }, { required: ['age'] }];

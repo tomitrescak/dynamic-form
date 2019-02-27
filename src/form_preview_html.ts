@@ -37,8 +37,8 @@ export class FormPreviewHtml {
         const options = filterSource
           ? dataSet
               .getSchema(list)
-              .enum.filter((v: any) => v[filterColumn] === dataSet.getValue(filterSource))
-          : dataSet.getSchema(list).enum; /*?*/
+              .$enum.filter((v: any) => v[filterColumn] === dataSet.getValue(filterSource))
+          : dataSet.getSchema(list).$enum; /*?*/
 
         const text = options.find(o => o.value === value).text;
         return text;
@@ -48,7 +48,7 @@ export class FormPreviewHtml {
           'checked="true"'} />`;
       case 'Radio':
         let radioList = formElement.list;
-        const radioOptions = dataSet.getSchema(radioList).enum;
+        const radioOptions = dataSet.getSchema(radioList).$enum;
         const radioText = radioOptions.find(o => o.value === value).text;
         return radioText;
       case 'Repeater':

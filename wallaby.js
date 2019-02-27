@@ -1,4 +1,8 @@
 module.exports = function(wallaby) {
+  var path = require('path');
+  process.env.NODE_PATH =
+    path.join(__dirname, '../node_modules') + path.delimiter + path.join(__dirname, 'node_modules');
+
   return {
     files: [
       'package.json',
@@ -14,12 +18,16 @@ module.exports = function(wallaby) {
 
     env: {
       type: 'node',
-      runner: 'node'
+      runner: 'node',
+      params: {
+        // runner: '--async-stack-traces'
+      }
     },
     workers: {
       initial: 1,
       regular: 1
     },
-    testFramework: 'jest'
+    testFramework: 'jest',
+    path: require('path').join(__dirname, '/../node_modules/jest-cli')
   };
 };

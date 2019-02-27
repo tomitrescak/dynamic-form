@@ -100,6 +100,9 @@ export function buildStore(schema: Schema) {
     if (node.expression) {
       continue;
     }
+    if (node.$ref) {
+      continue;
+    }
     let definition = mstTypeFactory(node);
     if (definition) {
       mstDefinition[key] = types.maybe(definition);
@@ -113,6 +116,21 @@ export function buildStore(schema: Schema) {
   // build tree
   const mst = FormStore.named('FormStore')
     .props(mstDefinition)
+    .props(
+      properties.reduce((previous: any, key: string) => {
+        // handle references ($ref = '#' is a reference to self)
+        // other references are currently unsupported
+        let node = schema.properties[key];
+        if (node.$ref) {
+          if (node.$ref === '#') {
+            previous[key] = types.union(types.late(() => mst), types.undefined, types.null);
+          } else {
+            throw new Error('We currently do not support internal references');
+          }
+        }
+        return previous;
+      }, {})
+    )
     .views(viewDefinition)
     .actions(() => ({
       getSchema(key: string) {
