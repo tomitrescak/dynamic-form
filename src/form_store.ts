@@ -7,7 +7,7 @@ import { config } from './config';
 
 export type IValidator = (input: string) => string;
 
-export type DataSet = typeof FormStore.Type;
+export type DataSet<T = {}> = typeof FormStore.Type & Readonly<T>;
 
 export type ValidationResult = {
   required: number;
@@ -89,6 +89,9 @@ export const FormStore = types
     errors: observable.map({})
   }))
   .views(self => ({
+    get parent() {
+      return getParent(self, 2);
+    },
     getValue(item: string): any {
       if (!item) {
         return self;
@@ -246,19 +249,3 @@ export const FormStore = types
       }
     };
   });
-
-// export const FormStore = types
-//   .model({
-//     errors: types.map(types.string)
-//   })
-//   .actions(self => ({
-//     setItem(item: string, value: string): void {
-//       (self as any)[item] = value;
-//     },
-//     getItem(item: string): string {
-//       return (self as any)[item];
-//     },
-//     getError(item: string): string {
-//       return self.errors.get(item);
-//     }
-//   }));

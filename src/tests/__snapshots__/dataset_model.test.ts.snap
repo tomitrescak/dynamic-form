@@ -26,35 +26,6 @@ Object {
 }
 `;
 
-exports[`Dataset creates mst with default values 2`] = `
-Object {
-  "accounts": Array [],
-  "address": Object {
-    "number": "",
-    "street": "",
-  },
-  "age": "",
-  "dateMarried": "",
-  "fatherAge": "",
-  "married": "",
-  "name": "",
-  "salary": 300,
-}
-`;
-
-exports[`Dataset creates mst with recursive definitions values 1`] = `
-Object {
-  "father": Object {
-    "father": Object {
-      "father": undefined,
-      "name": "Michal Sr",
-    },
-    "name": "Michal Jr",
-  },
-  "name": "Tomas",
-}
-`;
-
 exports[`Dataset creates mst with values 1`] = `
 Object {
   "accounts": Array [
@@ -73,21 +44,5 @@ Object {
   "married": true,
   "name": "Tomas",
   "salary": 2300.34,
-}
-`;
-
-exports[`Dataset validates the root dataset 1`] = `
-Object {
-  "accounts": Array [],
-  "address": Object {
-    "number": "",
-    "street": "",
-  },
-  "age": "",
-  "dateMarried": "",
-  "fatherAge": "",
-  "married": "",
-  "name": "",
-  "salary": 300,
 }
 `;

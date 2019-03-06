@@ -32,6 +32,10 @@ export interface FormDefinition {
   elements?: FormElement[];
 }
 
+export interface PropMap {
+  [index: string]: string | number | PropMap;
+}
+
 export interface FormElement {
   row?: number;
   column?: number;
@@ -48,7 +52,7 @@ export interface FormElement {
   filterSource?: string;
   filterColumn?: string;
   control?: FormControl;
-  controlProps?: { [index: string]: any };
+  controlProps?: PropMap;
   vertical?: boolean;
   elements?: FormElement[];
   url?: string;

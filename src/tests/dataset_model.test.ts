@@ -345,7 +345,48 @@ describe('Dataset', () => {
       father: { name: 'Michal Jr', father: { name: 'Michal Sr' } },
       friends: [{ name: 'Tomas' }, { name: 'Harry' }]
     });
-    expect(defaultData.toJS({ replaceDates: false, replaceEmpty: false })).toBe('');
+    expect(defaultData.toJS({ replaceDates: false, replaceEmpty: false })).toEqual({
+      father: {
+        father: { father: undefined, friends: [], name: 'Michal Sr' },
+        friends: [],
+        name: 'Michal Jr'
+      },
+      friends: [
+        { father: undefined, friends: [], name: 'Tomas' },
+        { father: undefined, friends: [], name: 'Harry' }
+      ],
+      name: 'Tomas'
+    });
+  });
+
+  it('creates mst with referenced definitions values', () => {
+    const recursiveSchema: JSONSchema = {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        car: { $ref: '#/definitions/car' },
+        father: { $ref: '#' }
+      },
+      definitions: {
+        car: {
+          type: 'object',
+          properties: {
+            brand: { type: 'string' }
+          }
+        }
+      }
+    };
+    const mst = buildStore(new Schema(recursiveSchema));
+    const defaultData = mst.create({
+      name: 'Tomas',
+      father: { name: 'Michal Jr' },
+      car: { brand: 'Honda' }
+    });
+    expect(defaultData.toJS()).toEqual({
+      car: { brand: 'Honda' },
+      father: { car: undefined, father: undefined, name: 'Michal Jr' },
+      name: 'Tomas'
+    });
   });
 
   it('validates the root dataset', () => {

@@ -65,6 +65,7 @@ export class Schema extends JSONSchemaBase {
   // store: typeof FormStore.Type;
   parent: Schema;
   properties: { [index: string]: Schema };
+  definitions: { [index: string]: Schema };
   items: Schema;
   required: boolean;
   readOnly: boolean;
@@ -97,16 +98,21 @@ export class Schema extends JSONSchemaBase {
     }
 
     if (schema.type === 'object') {
-      this.properties = {};
-      if (!schema.properties) {
-        throw new Error('Schema does not define any properties!');
+      if (schema.properties) {
+        this.properties = {};
+        for (let key of Object.getOwnPropertyNames(schema.properties)) {
+          this.properties[key] = new Schema(schema.properties[key] as JSONSchema, {
+            parent: this,
+            required: schema.required && schema.required.includes(key),
+            key
+          });
+        }
       }
-      for (let key of Object.getOwnPropertyNames(schema.properties)) {
-        this.properties[key] = new Schema(schema.properties[key] as JSONSchema, {
-          parent: this,
-          required: schema.required && schema.required.includes(key),
-          key
-        });
+    }
+
+    if (schema.definitions) {
+      for (let key of Object.getOwnPropertyNames(schema.definitions)) {
+        this.definitions[key] = new Schema(schema.definitions[key] as JSONSchema, { key });
       }
     }
 
