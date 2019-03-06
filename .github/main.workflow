@@ -1,6 +1,6 @@
 workflow "Build, Test, and Publish" {
   on = "push"
-  resolves = ["Deploy Notification"]
+  resolves = ["Test"]
 }
 
 action "Install Packages" {
@@ -14,8 +14,3 @@ action "Test" {
   args = "test"
 }
 
-action "Deploy Notification" {
-  needs = "Test"
-  uses = "apex/actions/slack@master"
-  secrets = ["SLACK_WEBHOOK_URL"]
-}
