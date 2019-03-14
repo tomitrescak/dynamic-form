@@ -7,9 +7,11 @@ export type FormControl =
   | 'Formula'
   | 'Image'
   | 'Input'
+  | 'Modal'
   | 'Radio'
   | 'RejectButton'
   | 'Repeater'
+  | 'Search'
   | 'Select'
   | 'Signature'
   | 'Table'
@@ -31,6 +33,8 @@ export interface FormElement {
   source?: string;
   sourceRef?: string;
   label?: string;
+  renderer?: any;
+  handler?: string;
   inline?: boolean;
   parent?: FormElement;
   list?: string;
