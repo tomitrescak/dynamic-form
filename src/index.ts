@@ -8,3 +8,4 @@ export { JSONSchema, JSONSchemaType } from './json_schema';
 export { buildStore } from './mst_builder';
 export { setUndoManager, undoManager } from './undo_manager';
 export { generateSchema } from './schema_generator';
+export { default as extend } from 'deepmerge';

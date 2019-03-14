@@ -41,7 +41,6 @@ export class FormModel {
     this.elements = form.elements;
 
     // sort elements by row and column
-
     this.elements.sort(formItemSort);
 
     // create dataset

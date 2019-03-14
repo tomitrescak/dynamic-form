@@ -7,7 +7,7 @@ import { config } from './config';
 
 export type IValidator = (input: string) => string;
 
-export type DataSet = typeof FormStore.Type;
+export type DataSet<T = {}> = typeof FormStore.Type & Readonly<T>;
 
 export type ValidationResult = {
   required: number;
@@ -20,7 +20,7 @@ export type ValidationResult = {
 function strip(obj: any, options: ToJsOptions) {
   // console.log(options);
 
-  if (typeof obj === 'object') {
+  if (obj && typeof obj === 'object') {
     if (obj.errors) {
       delete obj.errors;
       delete obj.inversePatches;
@@ -32,7 +32,7 @@ function strip(obj: any, options: ToJsOptions) {
       if (options.replaceDates && item instanceof Date) {
         obj[key] = item.toISOString();
       }
-      if (item === '') {
+      if (item === '' || item === null) {
         if (options.replaceEmpty) {
           obj[key] = undefined;
         }
@@ -89,21 +89,34 @@ export const FormStore = types
     errors: observable.map({})
   }))
   .views(self => ({
+    get parent() {
+      return getParent(self, 2);
+    },
     getValue(item: string): any {
       if (!item) {
         return self;
       }
+      let s: any = self;
       // allow dot notation for obtaining values
       if (item.indexOf('.') > 0) {
         let [first, ...rest] = item.split('.');
-        return (self as any)[first].getValue(rest.join('.'));
+        if (Array.isArray(s[first])) {
+          return rest.length > 1
+            ? s[first][parseInt(rest[0])].getValue(rest.slice(1).join('.'))
+            : s[first][parseInt(rest[0])];
+        }
+        return s[first].getValue(rest.join('.'));
       }
-      return (self as any)[item];
+      return s[item];
     },
     getError(item: string): string {
+      let s: any = self;
       if (item.indexOf('.') > 0) {
         let [first, ...rest] = item.split('.');
-        return (self as any)[first].getError(rest.join('.'));
+        if (Array.isArray(s[first])) {
+          return s[first][parseInt(rest[0])].getError(rest.slice(1).join('.'));
+        }
+        return s[first].getError(rest.join('.'));
       }
       return self.errors.get(item);
     }
@@ -236,19 +249,3 @@ export const FormStore = types
       }
     };
   });
-
-// export const FormStore = types
-//   .model({
-//     errors: types.map(types.string)
-//   })
-//   .actions(self => ({
-//     setItem(item: string, value: string): void {
-//       (self as any)[item] = value;
-//     },
-//     getItem(item: string): string {
-//       return (self as any)[item];
-//     },
-//     getError(item: string): string {
-//       return self.errors.get(item);
-//     }
-//   }));

@@ -2,28 +2,39 @@ export type FormControl =
   | 'ApproveButton'
   | 'Checkbox'
   | 'Comment'
+  | 'Date'
+  | 'DateRange'
+  | 'DateTime'
   | 'DeleteButton'
+  | 'EditorCell'
   | 'Form'
   | 'Formula'
+  | 'Group'
   | 'Image'
   | 'Input'
   | 'Modal'
+  | 'Menu'
   | 'Radio'
   | 'RejectButton'
   | 'Repeater'
   | 'Search'
   | 'Select'
   | 'Signature'
+  | 'SubmitButton'
   | 'Table'
   | 'Text'
   | 'Textarea'
-  | 'EditorCell'
+  | 'Time'
   | 'Value';
 
 export interface FormDefinition {
   name: string;
   description?: string;
   elements?: FormElement[];
+}
+
+export interface PropMap {
+  [index: string]: string | number | PropMap;
 }
 
 export interface FormElement {
@@ -33,7 +44,7 @@ export interface FormElement {
   source?: string;
   sourceRef?: string;
   label?: string;
-  renderer?: any;
+  renderer?: string;
   handler?: string;
   inline?: boolean;
   parent?: FormElement;
@@ -42,8 +53,12 @@ export interface FormElement {
   filterSource?: string;
   filterColumn?: string;
   control?: FormControl;
-  controlProps?: { [index: string]: any };
+  controlProps?: PropMap;
   vertical?: boolean;
+  options?: () => Array<{ value: string; text: string }>;
+  validate?: () => string;
+  visible?: () => boolean;
+  info?: string;
   elements?: FormElement[];
   url?: string;
 }

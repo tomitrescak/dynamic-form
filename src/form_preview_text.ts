@@ -35,12 +35,18 @@ export class FormPreviewText {
         return value;
       case 'Select': {
         let { source, controlProps, list, filterSource, filterColumn } = formElement;
+
         const options = filterSource
           ? dataSet
               .getSchema(list)
               .$enum.filter((v: any) => v[filterColumn] === dataSet.getValue(filterSource))
           : dataSet.getSchema(list).$enum; /*?*/
 
+        if (!options) {
+          throw new Error(
+            `Could not find options for source '${source}' requesting '${list}' and filterSource '${filterSource}'`
+          );
+        }
         const text = options.find(o => o.value === value).text;
         return text;
       }
@@ -48,7 +54,7 @@ export class FormPreviewText {
         return dataSet.getValue(formElement.source) ? 'Yes' : 'No';
       case 'Radio':
         let radioList = formElement.list;
-        const radioOptions = dataSet.getSchema(radioList).enum;
+        const radioOptions = dataSet.getSchema(radioList).$enum;
         const radioText = radioOptions.find(o => o.value === value).text;
         return radioText;
       case 'Repeater':
@@ -92,9 +98,11 @@ export class FormPreviewText {
     let label =
       formControl.control === 'Text'
         ? `\n${formControl.label}`
-        : formControl.label
-        ? `${formControl.label.trim()}: `
-        : '';
+        : !formControl.label
+        ? ''
+        : formControl.elements && formControl.elements.length
+        ? `: ${formControl.label.trim()}`
+        : `${formControl.label.trim()}: `;
 
     if (formControl.elements && formControl.elements.length) {
       columns.push(`\n== Start${label} ==

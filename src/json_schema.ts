@@ -129,13 +129,6 @@ export class JSONSchemaBase {
   contentEncoding?: string;
 
   /**
-   * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-9
-   */
-  definitions?: {
-    [key: string]: JSONSchema;
-  };
-
-  /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-10
    */
   title?: string;
@@ -148,6 +141,12 @@ export class JSONSchemaBase {
 
 export class JSONSchema extends JSONSchemaBase {
   properties?: {
+    [key: string]: JSONSchema;
+  };
+  /**
+   * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-9
+   */
+  definitions?: {
     [key: string]: JSONSchema;
   };
   items?: JSONSchema | JSONSchema[];
