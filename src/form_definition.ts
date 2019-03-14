@@ -9,6 +9,7 @@ export type FormControl =
   | 'EditorCell'
   | 'Form'
   | 'Formula'
+  | 'Group'
   | 'Image'
   | 'Input'
   | 'Modal'
@@ -54,6 +55,10 @@ export interface FormElement {
   control?: FormControl;
   controlProps?: PropMap;
   vertical?: boolean;
+  options?: () => Array<{ value: string; text: string }>;
+  validate?: () => string;
+  visible?: () => boolean;
+  info?: string;
   elements?: FormElement[];
   url?: string;
 }

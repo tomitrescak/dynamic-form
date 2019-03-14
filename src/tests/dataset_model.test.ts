@@ -6,6 +6,9 @@ import { create } from './data';
 import { JSONSchema } from '../json_schema';
 
 import { config } from '../config';
+
+import merge from 'deepmerge';
+
 import { safeEval } from '../form_utils';
 
 describe('Dataset', () => {
@@ -325,6 +328,51 @@ describe('Dataset', () => {
     const mst = buildStore(schema);
     const defaultData = mst.create({});
     expect(defaultData.toJS({ replaceDates: false, replaceEmpty: false })).toMatchSnapshot();
+  });
+
+  it('creates mst with external schemas', () => {
+    const n = buildStore(
+      {
+        type: 'object',
+        properties: {
+          moo: { $ref: '#/definitions/moo' }
+        }
+      },
+      {
+        moo: {
+          type: 'object',
+          properties: {
+            pip: { type: 'string' }
+          }
+        }
+      }
+    );
+    const data = n.create({ moo: { pip: '1' } });
+  });
+
+  it('simulates polymorphism via merging', () => {
+    const BaseElement = {
+      type: 'object',
+      properties: {
+        id: { type: 'number' },
+        name: { type: 'string' },
+        documentation: { type: 'string' }
+      }
+    };
+
+    // Flow has nothing, but sequence flow has
+
+    const SequenceFlow = merge(BaseElement, {
+      type: 'object',
+      properties: {
+        conditionExpression: { type: 'string' },
+        id: { type: 'string' }
+      }
+    });
+
+    console.log(SequenceFlow);
+    expect(SequenceFlow.properties.id.type).toBe('string');
+    expect(SequenceFlow.properties.conditionExpression.type).toBe('string');
   });
 
   it('creates mst with recursive definitions values', () => {
