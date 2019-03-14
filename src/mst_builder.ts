@@ -133,7 +133,7 @@ function buildTree(schema: Schema, definitions: any = null, addUndo = false) {
      ======================================================== */
   const mstDefinition: { [index: string]: any } = {};
   if (addUndo) {
-    mstDefinition.history = types.optional(UndoManager, {});
+    mstDefinition.history = types.optional(UndoManager, {} as any);
   }
 
   // build tre
