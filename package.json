@@ -1,7 +1,7 @@
 {
   "name": "@tomino/dynamic-form",
   "private": false,
-  "version": "1.0.10-rc1",
+  "version": "1.0.10",
   "description": "Dynamic form harnessing power of mobx-state-tree and JSON schema",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

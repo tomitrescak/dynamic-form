@@ -56,8 +56,8 @@ export interface FormElement {
   controlProps?: PropMap;
   vertical?: boolean;
   options?: () => Array<{ value: string; text: string }>;
-  validate?: () => string;
-  visible?: () => boolean;
+  validate?: (value: any) => string;
+  visible?: (owner: any) => boolean;
   info?: string;
   elements?: FormElement[];
   url?: string;
