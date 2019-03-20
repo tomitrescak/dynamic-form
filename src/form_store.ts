@@ -140,8 +140,8 @@ export const FormStore = types
     }
 
     return {
-      addRow(key: string) {
-        const data = self.getSchema(key).items.defaultValue();
+      addRow(key: string, data?: any) {
+        data = data || self.getSchema(key).items.defaultValue();
         self.getValue(key).push(data);
 
         this.validateField(key);

@@ -5,6 +5,7 @@ module.exports = function(wallaby) {
 
   return {
     files: [
+      'mocha.config.js',
       'package.json',
       'tsconfig.json',
       'src/**/*.+(js|jsx|ts|tsx|json|snap|css|less|sass|scss|jpg|jpeg|gif|png|svg|graphql)',
@@ -27,7 +28,10 @@ module.exports = function(wallaby) {
       initial: 1,
       regular: 1
     },
-    testFramework: 'jest',
-    path: require('path').join(__dirname, '/../node_modules/jest-cli')
+    testFramework: 'mocha',
+    setup(wallaby) {
+      require('./mocha.config.js');
+      require('mocha-jest-snapshots').patch(wallaby);
+    }
   };
 };

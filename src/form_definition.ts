@@ -1,3 +1,5 @@
+import { DataSet } from './form_store';
+
 export type FormControl =
   | 'ApproveButton'
   | 'Checkbox'
@@ -34,8 +36,10 @@ export interface FormDefinition {
 }
 
 export interface PropMap {
-  [index: string]: string | number | PropMap;
+  [index: string]: string | number | boolean | Date | PropMap;
 }
+
+type DropdownValue = { value: string; text: string };
 
 export interface FormElement {
   row?: number;
@@ -55,9 +59,10 @@ export interface FormElement {
   control?: FormControl;
   controlProps?: PropMap;
   vertical?: boolean;
-  options?: () => Array<{ value: string; text: string }>;
+  options?: () => DropdownValue[];
   validate?: (value: any) => string;
-  visible?: (owner: any) => boolean;
+  visible?: (owner: DataSet) => boolean;
+  parse?: (value: string, prev: any) => any;
   info?: string;
   elements?: FormElement[];
   url?: string;

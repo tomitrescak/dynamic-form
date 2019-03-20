@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
+    "test": "mocha --require ./mocha.config.js src/**/*.test.*",
     "build": "tsc"
   },
   "repository": {
@@ -25,13 +25,17 @@
   },
   "homepage": "https://github.com/tomitrescak/dynamic-form#readme",
   "devDependencies": {
-    "@types/jest": "*",
-    "jest": "*",
-    "jest-cli": "*",
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.6",
+    "@types/sinon": "^7.0.10",
+    "@types/sinon-chai": "^3.2.2",
+    "chai": "^4.2.0",
     "mobx": "*",
     "mobx-state-tree": "*",
+    "mocha": "^6.0.2",
     "mst-middlewares": "*",
-    "ts-jest": "*",
+    "sinon": "^7.2.7",
+    "sinon-chai": "^3.3.0",
     "typescript": "*"
   },
   "jest": {
@@ -42,6 +46,7 @@
     "@tomino/toolbelt": "*",
     "ajv": "^6.7.0",
     "ajv-errors": "^1.0.1",
-    "deepmerge": "^3.1.0"
+    "deepmerge": "^3.1.0",
+    "mocha-jest-snapshots": "^1.0.7"
   }
 }

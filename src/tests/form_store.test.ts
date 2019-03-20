@@ -1,10 +1,11 @@
-import { DataSet } from '../form_store';
+import { fake } from 'sinon';
+
 import { Schema } from '../data_schema_model';
 import { buildStore } from '../mst_builder';
 import { JSONSchema } from '../json_schema';
 import { config } from '../config';
 
-config.setDirty = jest.fn();
+config.setDirty = fake();
 
 describe('FormStore', () => {
   describe('setValue', () => {
@@ -37,16 +38,16 @@ describe('FormStore', () => {
     it('sets flat value', () => {
       let dataset = initDataset();
       dataset.setValue('simple', 4);
-      expect(dataset.getValue('simple')).toEqual(4);
+      expect(dataset.getValue('simple')).to.equal(4);
     });
 
     it('sets complex value', () => {
       let dataset = initDataset();
       dataset.setValue('person.address.street', 'Elm');
-      expect(dataset.getValue('person.address.street')).toEqual('Elm');
+      expect(dataset.getValue('person.address.street')).to.equal('Elm');
 
       dataset.setValue('person.address.street', '');
-      expect(dataset.getError('person.address.street')).toEqual('Value is required');
+      expect(dataset.getError('person.address.street')).to.equal('Value is required');
     });
   });
 });

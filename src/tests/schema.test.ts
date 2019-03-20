@@ -1,3 +1,5 @@
+import { fake } from 'sinon';
+
 import { JSONSchema } from '../json_schema';
 import { Schema } from '../data_schema_model';
 import { buildStore } from '../mst_builder';
@@ -39,16 +41,19 @@ describe('Schema', () => {
 
   describe('convertPath', () => {
     it('converts paths from mobx-state-tree to json schema style', () => {
-      expect(Schema.convertPath('/tomi/other/0/now/1')).toEqual('.tomi.other[0].now[1]');
+      expect(Schema.convertPath('/tomi/other/0/now/1')).to.equal('.tomi.other[0].now[1]');
     });
   });
 
   describe('parseParent', () => {
     it('creates a parent path and a property', () => {
-      expect(Schema.parseParent('')).toEqual({ property: '', dataPath: '' });
-      expect(Schema.parseParent('foo')).toEqual({ property: 'foo', dataPath: '' });
-      expect(Schema.parseParent('foo.boo')).toEqual({ property: 'boo', dataPath: 'foo' });
-      expect(Schema.parseParent('foo[0].boo')).toEqual({ property: 'boo', dataPath: 'foo[0]' });
+      expect(Schema.parseParent('')).to.deep.equal({ property: '', dataPath: '' });
+      expect(Schema.parseParent('foo')).to.deep.equal({ property: 'foo', dataPath: '' });
+      expect(Schema.parseParent('foo.boo')).to.deep.equal({ property: 'boo', dataPath: 'foo' });
+      expect(Schema.parseParent('foo[0].boo')).to.deep.equal({
+        property: 'boo',
+        dataPath: 'foo[0]'
+      });
     });
   });
 
@@ -78,7 +83,7 @@ describe('Schema', () => {
           ],
           null
         )
-      ).toEqual([
+      ).to.deep.equal([
         {
           keyword: 'required',
           dataPath: '/name',
@@ -107,9 +112,10 @@ describe('Schema', () => {
       schemaDef.required = ['first'];
 
       const schema = new Schema(schemaDef);
-      const result = schema.validate({} as DataSet);
+      const obj: any = {};
+      const result = schema.validate(obj);
 
-      expect(result).toEqual([
+      expect(result).to.deep.equal([
         {
           dataPath: '/first',
           keyword: 'required',
@@ -124,11 +130,11 @@ describe('Schema', () => {
       const schemaDef = createBaseSchema();
       const schema = new Schema(schemaDef);
       const result = schema.validate({} as DataSet);
-      expect(result).toBeFalsy();
+      expect(result).to.be.false;
     });
 
     it('assigns errors to dataset', () => {
-      config.setDirty = jest.fn();
+      config.setDirty = fake();
       const schemaDef = createBaseSchema();
       schemaDef.required = ['first'];
       const schema = new Schema(schemaDef);
@@ -136,7 +142,7 @@ describe('Schema', () => {
       const dataset = buildStore(schema).create({ integer: '2.3' });
 
       const r = schema.validate(dataset);
-      expect(r).toEqual([
+      expect(r).to.deep.equal([
         {
           dataPath: '/first',
           keyword: 'required',
@@ -155,7 +161,7 @@ describe('Schema', () => {
 
       let result = schema.validateAndAssignErrors(dataset);
 
-      expect(result).toEqual([
+      expect(result).to.deep.equal([
         {
           dataPath: '/first',
           keyword: 'required',
@@ -171,14 +177,14 @@ describe('Schema', () => {
           schemaPath: '#/properties/integer/type'
         }
       ]);
-      expect(dataset.errors.get('integer')).toBe('should be integer');
-      expect(dataset.errors.get('first')).toBe('Value is required');
+      expect(dataset.errors.get('integer')).to.equal('should be integer');
+      expect(dataset.errors.get('first')).to.equal('Value is required');
 
       dataset.setValue('first', true);
 
       result = schema.validateAndAssignErrors(dataset);
 
-      expect(result).toEqual([
+      expect(result).to.deep.equal([
         {
           dataPath: '/integer',
           keyword: 'type',
@@ -187,12 +193,12 @@ describe('Schema', () => {
           schemaPath: '#/properties/integer/type'
         }
       ]);
-      expect(dataset.errors.get('integer')).toBe('should be integer');
-      expect(dataset.errors.get('first')).toBe('');
+      expect(dataset.errors.get('integer')).to.equal('should be integer');
+      expect(dataset.errors.get('first')).to.equal('');
     });
 
     it('assigns custom errors to dataset', () => {
-      config.setDirty = jest.fn();
+      config.setDirty = fake();
       const schemaDef = createBaseSchema();
       schemaDef.required = ['first'];
       schemaDef.errorMessage = { required: { first: 'First must be specified!' } };
@@ -239,19 +245,19 @@ describe('Schema', () => {
         }
       ];
 
-      expect(r).toEqual(validationResult);
+      expect(r).to.deep.equal(validationResult);
 
       let result = schema.validateAndAssignErrors(dataset);
 
-      expect(result).toEqual(validationResult);
-      expect(dataset.errors.get('integer')).toBe('Must be int, buddy!');
-      expect(dataset.errors.get('first')).toBe('First must be specified!');
+      expect(result).to.deep.equal(validationResult);
+      expect(dataset.errors.get('integer')).to.equal('Must be int, buddy!');
+      expect(dataset.errors.get('first')).to.equal('First must be specified!');
 
       dataset.setValue('first', true);
 
       result = schema.validateAndAssignErrors(dataset);
 
-      expect(result).toEqual([
+      expect(result).to.deep.equal([
         {
           keyword: 'errorMessage',
           dataPath: '/integer',
@@ -270,8 +276,8 @@ describe('Schema', () => {
           message: 'Must be int, buddy!'
         }
       ]);
-      expect(dataset.errors.get('integer')).toBe('Must be int, buddy!');
-      expect(dataset.errors.get('first')).toBe('');
+      expect(dataset.errors.get('integer')).to.equal('Must be int, buddy!');
+      expect(dataset.errors.get('first')).to.equal('');
     });
 
     it('validates combined value', () => {
@@ -279,7 +285,6 @@ describe('Schema', () => {
       // if all are false it is an error
       // one value
 
-      let result = null;
       let schemaDef = createBaseSchema();
 
       schemaDef.allOf = [
@@ -288,7 +293,7 @@ describe('Schema', () => {
       ];
 
       let schema = new Schema(schemaDef);
-      expect(schema.validate({ first: true } as any)).toEqual([
+      expect(schema.validate({ first: true } as any)).to.deep.equal([
         {
           dataPath: '/integer',
           keyword: 'required',

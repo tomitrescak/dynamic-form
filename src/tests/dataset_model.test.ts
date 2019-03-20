@@ -1,4 +1,7 @@
-import { autorun, toJS } from 'mobx';
+import { autorun } from 'mobx';
+
+import merge from 'deepmerge';
+import { fake } from 'sinon';
 
 import { Schema } from '../data_schema_model';
 import { buildStore } from '../mst_builder';
@@ -6,10 +9,6 @@ import { create } from './data';
 import { JSONSchema } from '../json_schema';
 
 import { config } from '../config';
-
-import merge from 'deepmerge';
-
-import { safeEval } from '../form_utils';
 
 describe('Dataset', () => {
   let jsonSchema = (): JSONSchema => ({
@@ -96,7 +95,7 @@ describe('Dataset', () => {
   });
 
   it('creates a new mst and validates values', () => {
-    config.setDirty = jest.fn();
+    config.setDirty = fake();
 
     const mst = buildStore(schema);
     const data = mst.create({});
@@ -110,68 +109,68 @@ describe('Dataset', () => {
     // ok
 
     data.setValue('age', '30');
-    expect(data.getValue('age')).toEqual(30);
+    expect(data.getValue('age')).to.equal(30);
 
     data.setValue('salary', '30.15');
-    expect(data.getValue('salary')).toEqual(30.15);
+    expect(data.getValue('salary')).to.equal(30.15);
 
     data.setValue('salary', '30');
-    expect(data.getValue('salary')).toEqual(30);
+    expect(data.getValue('salary')).to.equal(30);
 
     // // format
 
     data.setValue('age', '30.15');
-    expect(data.getValue('age')).toEqual('30.15');
-    expect(data.validateField('age')).toBe('should be integer');
+    expect(data.getValue('age')).to.equal('30.15');
+    expect(data.validateField('age')).to.equal('should be integer');
 
     data.setValue('age', 'Momo');
-    expect(data.getValue('age')).toEqual('Momo');
-    expect(data.validateField('age')).toBe('should be integer');
+    expect(data.getValue('age')).to.equal('Momo');
+    expect(data.validateField('age')).to.equal('should be integer');
 
     data.setValue('salary', '30.aa');
-    expect(data.getValue('salary')).toEqual('30.aa');
-    expect(data.validateField('salary')).toBe('should be number');
+    expect(data.getValue('salary')).to.equal('30.aa');
+    expect(data.validateField('salary')).to.equal('should be number');
 
     // minimum
 
     data.setValue('age', '0');
-    expect(data.getValue('age')).toEqual(0);
+    expect(data.getValue('age')).to.equal(0);
 
     data.setValue('age', '-1');
-    expect(data.getValue('age')).toEqual(-1);
-    expect(data.validateField('age')).toBe('should be >= 0');
+    expect(data.getValue('age')).to.equal(-1);
+    expect(data.validateField('age')).to.equal('should be >= 0');
 
     // // maximum
 
     data.setValue('age', '130');
-    expect(data.getValue('age')).toEqual(130);
+    expect(data.getValue('age')).to.equal(130);
 
     data.setValue('age', '131');
-    expect(data.getValue('age')).toEqual(131);
-    expect(data.validateField('age')).toBe('should be <= 130');
+    expect(data.getValue('age')).to.equal(131);
+    expect(data.validateField('age')).to.equal('should be <= 130');
 
     // subselection ok 'a.b.c'
 
     data.setValue('address.number', '20');
-    expect(data.getValue('address.number')).toEqual(20);
+    expect(data.getValue('address.number')).to.equal(20);
 
     // exclusive minimum
 
     data.setValue('address.number', '0');
-    expect(data.getValue('address.number')).toEqual(0);
-    expect(data.getValue('address').validateField('number')).toBe('should be > 0');
+    expect(data.getValue('address.number')).to.equal(0);
+    expect(data.getValue('address').validateField('number')).to.equal('should be > 0');
 
     data.setValue('address.number', '1');
-    expect(data.getValue('address.number')).toEqual(1);
+    expect(data.getValue('address.number')).to.equal(1);
 
     // exclusive maximum
 
     data.setValue('address.number', '1000');
-    expect(data.getValue('address.number')).toEqual(1000);
-    expect(data.getValue('address').validateField('number', '1000')).toBe('should be < 1000');
+    expect(data.getValue('address.number')).to.equal(1000);
+    expect(data.getValue('address').validateField('number', '1000')).to.equal('should be < 1000');
 
     data.setValue('address.number', '999');
-    expect(data.getValue('address.number')).toEqual(999);
+    expect(data.getValue('address.number')).to.equal(999);
 
     /* =========================================================
         String
@@ -180,7 +179,7 @@ describe('Dataset', () => {
     // ok
 
     data.setValue('name', 'Bobo');
-    expect(data.getValue('name')).toEqual('Bobo');
+    expect(data.getValue('name')).to.equal('Bobo');
 
     // format ok
 
@@ -190,37 +189,37 @@ describe('Dataset', () => {
     // console.log(3);
     // console.log(data.getValue('accounts')[0]);
 
-    expect(data.getValue('accounts')[0].number).toEqual('234-234');
+    expect(data.getValue('accounts')[0].number).to.equal('234-234');
 
     error = data.getValue('accounts')[0].validateField('number', '123-123');
-    expect(error).toBeUndefined();
+    expect(error).to.be.undefined;
 
     // format error
 
     data.getValue('accounts')[0].setValue('number', '123d');
-    expect(data.getValue('accounts')[0].number).toEqual('123d');
+    expect(data.getValue('accounts')[0].number).to.equal('123d');
     error = data.getValue('accounts')[0].validateField('number');
-    expect(error).toEqual('should match pattern "\\d\\d\\d-\\d\\d\\d"');
+    expect(error).to.equal('should match pattern "\\d\\d\\d-\\d\\d\\d"');
 
     data.getValue('accounts')[0].setValue('number', '');
     error = data.getValue('accounts')[0].validateField('number', '');
-    expect(error).toEqual('Value is required');
+    expect(error).to.equal('Value is required');
 
     // minLength
 
     data.getValue('address').setValue('street', '123456');
     error = data.getValue('address').validateField('street', '123456');
-    expect(error).toBeUndefined();
+    expect(error).to.be.undefined;
 
     data.getValue('address').setValue('street', '123');
     error = data.getValue('address').validateField('street');
-    expect(error).toEqual('should NOT be shorter than 5 characters');
+    expect(error).to.equal('should NOT be shorter than 5 characters');
 
     // maxLength
 
     data.getValue('address').setValue('street', '1234567890123456789012345678901234567890');
     error = data.getValue('address').validateField('street');
-    expect(error).toEqual('should NOT be longer than 30 characters');
+    expect(error).to.equal('should NOT be longer than 30 characters');
 
     /* =========================================================
         Array
@@ -230,7 +229,7 @@ describe('Dataset', () => {
 
     data.removeRow('accounts', 0);
     error = data.validateField('accounts');
-    expect(error).toEqual('should NOT have fewer than 1 items');
+    expect(error).to.equal('should NOT have fewer than 1 items');
 
     // max items
 
@@ -240,7 +239,7 @@ describe('Dataset', () => {
     data.addRow('accounts');
 
     error = data.validateField('accounts');
-    expect(error).toEqual('should NOT have more than 3 items');
+    expect(error).to.equal('should NOT have more than 3 items');
 
     data.removeRow('accounts', 3);
 
@@ -250,12 +249,12 @@ describe('Dataset', () => {
     // console.log(data.getValue('accounts'))
 
     error = data.validateField('accounts');
-    expect(error).toBe('should NOT have duplicate items (items ## 1 and 2 are identical)');
+    expect(error).to.equal('should NOT have duplicate items (items ## 1 and 2 are identical)');
 
     data.getValue('accounts')[1].setValue('number', '123-234');
 
     error = data.validateField('accounts');
-    expect(error).toBe('should NOT have duplicate items (items ## 0 and 2 are identical)');
+    expect(error).to.equal('should NOT have duplicate items (items ## 0 and 2 are identical)');
 
     // all is well
 
@@ -263,7 +262,7 @@ describe('Dataset', () => {
     data.getValue('accounts')[2].setValue('number', '456-789');
 
     error = data.validateField('accounts');
-    expect(error).toBeUndefined();
+    expect(error).to.be.undefined;
 
     // unique items
 
@@ -273,29 +272,29 @@ describe('Dataset', () => {
 
     data.setValue('age', '10');
     data.setValue('fatherAge', '40');
-    expect(data.getValue('fatherAge')).toEqual(40);
+    expect(data.getValue('fatherAge')).to.equal(40);
 
     // failing expression
 
     data.setValue('fatherAge', '20');
-    expect(data.getValue('fatherAge')).toEqual(20);
+    expect(data.getValue('fatherAge')).to.equal(20);
 
     // console.log('WILL VALIDATE FATHER AGE');
     // console.log(data.fatherAge);
 
     error = data.validateField('fatherAge');
-    expect(error).toBe('Father age must be at least 18 years more then your age');
+    expect(error).to.equal('Father age must be at least 18 years more then your age');
 
     data.setValue('fatherAge', '80');
-    expect(data.getValue('fatherAge')).toEqual(80);
+    expect(data.getValue('fatherAge')).to.equal(80);
     error = data.validateField('fatherAge');
-    expect(error).toBeUndefined();
+    expect(error).to.be.undefined;
 
     data.getValue('accounts')[0].setValue('money', 10);
     data.getValue('accounts')[0].setValue('money', 5);
     error = data.getValue('accounts')[0].validateField('money');
-    expect(error).toEqual('You can only put even value of money!');
-    expect(data.getValue('accounts')[0].errors.get('money')).toBe(
+    expect(error).to.equal('You can only put even value of money!');
+    expect(data.getValue('accounts')[0].errors.get('money')).to.equal(
       'You can only put even value of money!'
     );
 
@@ -319,7 +318,7 @@ describe('Dataset', () => {
     });
 
     const errors = data.validateDataset();
-    expect(errors).toBeFalsy();
+    expect(errors).to.be.false;
 
     expect(data.toJS({ replaceDates: false })).toMatchSnapshot();
   });
@@ -371,8 +370,8 @@ describe('Dataset', () => {
     });
 
     console.log(SequenceFlow);
-    expect(SequenceFlow.properties.id.type).toBe('string');
-    expect(SequenceFlow.properties.conditionExpression.type).toBe('string');
+    expect(SequenceFlow.properties.id.type).to.equal('string');
+    expect(SequenceFlow.properties.conditionExpression.type).to.equal('string');
   });
 
   it('creates mst with recursive definitions values', () => {
@@ -393,7 +392,7 @@ describe('Dataset', () => {
       father: { name: 'Michal Jr', father: { name: 'Michal Sr' } },
       friends: [{ name: 'Tomas' }, { name: 'Harry' }]
     });
-    expect(defaultData.toJS({ replaceDates: false, replaceEmpty: false })).toEqual({
+    expect(defaultData.toJS({ replaceDates: false, replaceEmpty: false })).to.deep.equal({
       father: {
         father: { father: undefined, friends: [], name: 'Michal Sr' },
         friends: [],
@@ -430,7 +429,7 @@ describe('Dataset', () => {
       father: { name: 'Michal Jr' },
       car: { brand: 'Honda' }
     });
-    expect(defaultData.toJS()).toEqual({
+    expect(defaultData.toJS()).to.deep.equal({
       car: { brand: 'Honda' },
       father: { car: undefined, father: undefined, name: 'Michal Jr' },
       name: 'Tomas'
@@ -445,11 +444,11 @@ describe('Dataset', () => {
     const store = buildStore(rSchema);
     const d1 = store.create({ name: 'Tomas', age: 39 });
     const errors = d1.validateDataset(); /*?*/
-    expect(d1.errors.get('ROOT')).toEqual('should match exactly one schema in oneOf');
+    expect(d1.errors.get('ROOT')).to.equal('should match exactly one schema in oneOf');
   });
 
   it('correctly removes "possible" invalid values on successful validation of the whole dataset', () => {
-    config.setDirty = jest.fn();
+    config.setDirty = fake();
     const jSchema: JSONSchema = {
       type: 'object',
       properties: { foo: { type: 'string' }, bar: { type: 'string' } }
@@ -460,25 +459,26 @@ describe('Dataset', () => {
     let d1 = store.create({});
     d1.validateDataset(); /*?*/
 
-    expect(d1.errors.get('foo')).toEqual('Value is required');
-    expect(d1.errors.get('bar')).toEqual('Value is required');
+    expect(d1.errors.get('foo')).to.equal('Value is required');
+    expect(d1.errors.get('bar')).to.equal('Value is required');
 
     d1.setValue('foo', 'foo');
     d1.validateDataset(); /*?*/
 
-    expect(d1.errors.get('foo')).toBeUndefined();
-    expect(d1.errors.get('bar')).toBeUndefined();
+    expect(d1.errors.get('foo')).to.be.undefined;
+    expect(d1.errors.get('bar')).to.be.undefined;
 
     d1.setValue('foo', '');
     d1.setValue('bar', 'bar');
     d1.validateDataset(); /*?*/
 
-    expect(d1.errors.get('foo')).toBeUndefined();
-    expect(d1.errors.get('bar')).toBeUndefined();
+    expect(d1.errors.get('foo')).to.be.undefined;
+    expect(d1.errors.get('bar')).to.be.undefined;
   });
 
   it('respects validationGroup and correctly removes "possible" invalid values on successful validation', () => {
-    config.setDirty = jest.fn();
+    config.setDirty = fake();
+
     const jSchema: JSONSchema = {
       type: 'object',
       properties: {
@@ -493,18 +493,18 @@ describe('Dataset', () => {
     let d1 = store.create({});
 
     d1.validateDataset();
-    expect(d1.errors.get('foo')).toEqual('Value is required');
-    expect(d1.errors.get('bar')).toEqual('Value is required');
+    expect(d1.errors.get('foo')).to.equal('Value is required');
+    expect(d1.errors.get('bar')).to.equal('Value is required');
 
     d1.setValue('foo', 'foo');
 
-    expect(d1.errors.get('foo')).toBe('');
-    expect(d1.errors.get('bar')).toBe('');
+    expect(d1.errors.get('foo')).to.equal('');
+    expect(d1.errors.get('bar')).to.equal('');
 
     d1.setValue('foo', '');
 
-    expect(d1.errors.get('foo')).toEqual('Value is required');
-    expect(d1.errors.get('bar')).toEqual('Value is required');
+    expect(d1.errors.get('foo')).to.equal('Value is required');
+    expect(d1.errors.get('bar')).to.equal('Value is required');
   });
 
   it('allows to use expressions', () => {
@@ -513,7 +513,7 @@ describe('Dataset', () => {
       accounts: [{ number: '1', money: 1 }, { number: '2', money: 2 }, { number: '3', money: 3 }]
     });
 
-    expect(defaultData.getValue('accountTotal')).toBe(6);
+    expect(defaultData.getValue('accountTotal')).to.equal(6);
 
     let finalAccount = 0;
     autorun(() => {
@@ -522,6 +522,6 @@ describe('Dataset', () => {
 
     // check computed fields
     defaultData.getValue('accounts')[0].setValue('money', 10);
-    expect(finalAccount).toEqual(15);
+    expect(finalAccount).to.equal(15);
   });
 });

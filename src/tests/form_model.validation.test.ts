@@ -1,3 +1,5 @@
+import { fake } from 'sinon';
+
 import { JSONSchema } from '../json_schema';
 import { FormElement, FormDefinition } from '../form_definition';
 import { FormModel } from '../form_model';
@@ -5,7 +7,7 @@ import { config } from '../config';
 
 describe('FormModel: validation', () => {
   it('validates simple dataset', () => {
-    config.setDirty = jest.fn();
+    config.setDirty = fake();
 
     const schema: JSONSchema = {
       type: 'object',
@@ -29,7 +31,7 @@ describe('FormModel: validation', () => {
 
     let formModel = new FormModel(form, schema, { code: '' });
     let valid = formModel.validateWithReport(); /*?*/
-    expect(valid).toEqual([
+    expect(valid).to.deep.equal([
       {
         dataPath: '/code',
         keyword: 'required',
@@ -38,11 +40,11 @@ describe('FormModel: validation', () => {
         schemaPath: '#/required'
       }
     ]);
-    expect(formModel.dataSet.errors.get('code')).toBe('Value is required');
+    expect(formModel.dataSet.errors.get('code')).to.equal('Value is required');
 
     formModel.dataSet.setValue('code', 'AAA');
 
-    expect(formModel.dataSet.errors.get('code')).toBe('');
+    expect(formModel.dataSet.errors.get('code')).to.equal('');
   });
 
   it('validates more complex dataset', () => {
@@ -67,7 +69,7 @@ describe('FormModel: validation', () => {
 
     let formModel = new FormModel(form, schema, { code: 'AAAAA' });
     let valid = formModel.validateWithReport(); /*?*/
-    expect(valid).toEqual([
+    expect(valid).to.deep.equal([
       {
         dataPath: '/code',
         keyword: 'maxLength',
@@ -90,6 +92,6 @@ describe('FormModel: validation', () => {
         schemaPath: '#/properties/code/anyOf'
       }
     ]);
-    expect(formModel.dataSet.errors.get('code')).toBe('should NOT be longer than 3 characters');
+    expect(formModel.dataSet.errors.get('code')).to.equal('should NOT be longer than 3 characters');
   });
 });

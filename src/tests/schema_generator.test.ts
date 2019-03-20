@@ -66,7 +66,7 @@ it('generates schema from resources', () => {
 
   const newSchema = generateSchema(schema, resources as any);
 
-  expect(newSchema).toEqual({
+  expect(newSchema).to.deep.equal({
     type: 'object',
     default: ['foo'],
     properties: {

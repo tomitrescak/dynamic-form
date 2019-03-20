@@ -12,9 +12,9 @@ it('creates a new model', () => {
     null
   );
 
-  expect(model.description).toEqual('Desc');
-  expect(model.elements).toEqual([]);
-  expect(model.name).toEqual('Name');
+  expect(model.description).to.equal('Desc');
+  expect(model.elements).to.deep.equal([]);
+  expect(model.name).to.equal('Name');
 });
 
 function removeWs(text: string) {
@@ -36,7 +36,7 @@ describe('Preview', () => {
       null
     );
     let preview = model.createHtmlPreview();
-    expect(removeWs(preview)).toBe(`<table>
+    expect(removeWs(preview)).to.equal(`<table>
 <tbody>
 <tr style="display: none"><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /></tr>
 
@@ -254,7 +254,7 @@ describe('Preview', () => {
       }
     );
     let preview = model.createHtmlPreview();
-    expect(removeWs(preview)).toBe(`<table>
+    expect(removeWs(preview)).to.equal(`<table>
 <tbody>
 <tr style="display: none"><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /><td /></tr>
 <tr>
@@ -337,7 +337,7 @@ describe('Preview', () => {
 
     // check text preview
     preview = model.createTextPreview();
-    expect(preview).toBe(`Input Label: 1
+    expect(preview).to.equal(`Input Label: 1
 Formula Label: 5
 
 Text Label
@@ -383,9 +383,9 @@ it('sorts form fields when form is created', () => {
     null,
     null
   );
-  expect(model.elements[0].label).toEqual('1');
-  expect(model.elements[1].label).toEqual('2');
-  expect(model.elements[2].label).toEqual('3');
-  expect(model.elements[3].label).toEqual('4');
-  expect(model.elements[4].label).toEqual('6');
+  expect(model.elements[0].label).to.equal('1');
+  expect(model.elements[1].label).to.equal('2');
+  expect(model.elements[2].label).to.equal('3');
+  expect(model.elements[3].label).to.equal('4');
+  expect(model.elements[4].label).to.equal('6');
 });
