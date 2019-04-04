@@ -14,6 +14,7 @@ export type FormControl =
   | 'Group'
   | 'Image'
   | 'Input'
+  | 'Map'
   | 'Modal'
   | 'Menu'
   | 'Radio'
@@ -29,21 +30,22 @@ export type FormControl =
   | 'Time'
   | 'Value';
 
-export interface FormDefinition {
+export interface FormDefinition<T = any> {
   name: string;
   description?: string;
-  elements?: FormElement[];
+  elements?: FormElement<T>[];
 }
 
 export interface PropMap {
   [index: string]: string | number | boolean | Date | PropMap;
 }
 
-type DropdownValue = { value: string; text: string };
+export type DropdownValue = { value: string; text: string; disabled?: boolean };
 
-export interface FormElement {
+export interface FormElement<T = any> {
   row?: number;
   column?: number;
+  css?: string;
   width?: number;
   source?: string;
   sourceRef?: string;
@@ -51,7 +53,7 @@ export interface FormElement {
   renderer?: string;
   handler?: string;
   inline?: boolean;
-  parent?: FormElement;
+  parent?: FormElement<T>;
   list?: string;
   readOnly?: boolean;
   filterSource?: string;
@@ -59,11 +61,12 @@ export interface FormElement {
   control?: FormControl;
   controlProps?: PropMap;
   vertical?: boolean;
-  options?: () => DropdownValue[];
-  validate?: (value: any) => string;
-  visible?: (owner: DataSet) => boolean;
-  parse?: (value: string, prev: any) => any;
+  options?: (owner: DataSet<T>) => DropdownValue[];
+  validate?: (value: any, owner: T) => string;
+  visible?: (owner: DataSet<T>) => boolean;
+  parse?: (value: string, prev: any, owner: T) => any;
+  value?: (owner: DataSet<T>, source: string) => any;
   info?: string;
-  elements?: FormElement[];
+  elements?: FormElement<T>[];
   url?: string;
 }

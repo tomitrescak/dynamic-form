@@ -59,6 +59,7 @@ type SchemaOptions = {
   required?: boolean;
   key?: string;
   ajv?: Ajv.Ajv;
+  definitions?: any;
 };
 
 export class Schema extends JSONSchemaBase {
@@ -77,7 +78,7 @@ export class Schema extends JSONSchemaBase {
 
   constructor(
     schema: JSONSchema,
-    { parent = null, required = false, key = null }: SchemaOptions = {}
+    { parent = null, required = false, key = null, definitions = null }: SchemaOptions = {}
   ) {
     super();
 
@@ -86,6 +87,10 @@ export class Schema extends JSONSchemaBase {
     this.parent = parent;
     this.expression = schema.expression;
     this.key = key;
+
+    if (definitions) {
+      schema.definitions = { ...(schema.definitions || {}), ...definitions };
+    }
 
     // we do not need validator for end nodes
     // these are always validated from the parent
@@ -104,20 +109,30 @@ export class Schema extends JSONSchemaBase {
           this.properties[key] = new Schema(schema.properties[key] as JSONSchema, {
             parent: this,
             required: schema.required && schema.required.includes(key),
-            key
+            key,
+            definitions: schema.definitions
           });
         }
       }
     }
 
     if (schema.definitions) {
+      this.definitions = {};
       for (let key of Object.getOwnPropertyNames(schema.definitions)) {
-        this.definitions[key] = new Schema(schema.definitions[key] as JSONSchema, { key });
+        this.definitions[key] = new Schema(schema.definitions[key] as JSONSchema, {
+          parent: this,
+          key
+        });
       }
     }
 
     if (schema.type === 'array') {
-      this.items = new Schema(schema.items as JSONSchema, this);
+      this.items = new Schema(schema.items as JSONSchema, {
+        parent: this.parent,
+        key: this.key,
+        required: this.required
+        // definitions: schema.definitions
+      });
     }
   }
 
@@ -155,8 +170,11 @@ export class Schema extends JSONSchemaBase {
 
   defaultValue<T>(dataset: T = {} as T): T {
     // validator is set to assign default values
-    this.validator(dataset);
-    return dataset;
+    if (this.validator) {
+      this.validator(dataset);
+      return dataset;
+    }
+    return '' as any;
   }
 
   /* =========================================================
@@ -237,8 +255,8 @@ export class Schema extends JSONSchemaBase {
         return value === true || value === 'true' || value === 'True'
           ? true
           : !value || value === false || value === 'false' || value === 'False'
-          ? false
-          : value;
+            ? false
+            : value;
       default:
         return value;
     }
@@ -263,8 +281,10 @@ export class Schema extends JSONSchemaBase {
     // we use this when executing expressions
     // (this.ajv as any).currentData = cleanData;
 
-    if (!this.validator(cleanData) as any) {
-      return Schema.reassignErrors(this.validator.errors, this);
+    let validator = this.validator;
+
+    if (!validator(cleanData) as any) {
+      return Schema.reassignErrors(validator.errors, this);
     }
     return false;
   }

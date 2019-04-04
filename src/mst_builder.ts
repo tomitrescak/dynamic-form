@@ -203,7 +203,8 @@ function addDefinitions(external: { [index: string]: any }) {
 
 export function buildStore<T = {}>(
   schema: Schema | JSONSchema,
-  externalDefinitions: { [index: string]: JSONSchema } = {}
+  externalDefinitions: { [index: string]: JSONSchema } = {},
+  addUndo = true
 ): IModelType<{}, Readonly<T> & FT> {
   if (externalDefinitions) {
     schema.definitions = { ...(schema.definitions || {}), ...(externalDefinitions as any) };
@@ -215,7 +216,7 @@ export function buildStore<T = {}>(
   let definitions: { [index: string]: any } = addDefinitions(schema.definitions);
 
   // prepare model and views
-  return buildTree(schema, definitions, true) as IModelType<{}, Readonly<T> & FT>;
+  return buildTree(schema, definitions, addUndo) as IModelType<{}, Readonly<T> & FT>;
 }
 
 export function buildDataSet<T = {}>(

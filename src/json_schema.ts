@@ -16,6 +16,7 @@ export type JSONSchema7Type = JSONSchema7Array[] | boolean | number | null | obj
 
 // Workaround for infinite type recursion
 // https://github.com/Microsoft/TypeScript/issues/3496#issuecomment-128553540
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface JSONSchema7Array extends Array<JSONSchema7Type> {}
 
 export type JSONSchemaType = JSONSchema7Type;
@@ -41,6 +42,7 @@ export class JSONSchemaBase {
   expression?: string;
   validationExpression?: string;
   validationGroup?: string;
+  share?: boolean;
 
   /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-6.1
@@ -110,14 +112,6 @@ export class JSONSchemaBase {
   else?: JSONSchema;
 
   /**
-   * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-6.7
-   */
-  allOf?: JSONSchema[];
-  anyOf?: JSONSchema[];
-  oneOf?: JSONSchema[];
-  not?: JSONSchema;
-
-  /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-7
    */
   format?: string;
@@ -143,12 +137,18 @@ export class JSONSchema extends JSONSchemaBase {
   properties?: {
     [key: string]: JSONSchema;
   };
+  allOf?: JSONSchema[];
+  anyOf?: JSONSchema[];
+  oneOf?: JSONSchema[];
+  not?: JSONSchema;
+
   /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-9
    */
   definitions?: {
     [key: string]: JSONSchema;
   };
-  items?: JSONSchema | JSONSchema[];
+  items?: JSONSchema;
   required?: string[];
+  reference?: string;
 }

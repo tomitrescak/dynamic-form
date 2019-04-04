@@ -106,6 +106,42 @@ describe('Schema', () => {
     });
   });
 
+  describe('contstructor', () => {
+    it('allows definition values', () => {
+      const jsonSchema: JSONSchema = {
+        type: 'object',
+        properties: {
+          root: {
+            $ref: '#/definitions/referenced'
+          },
+          array: {
+            type: 'array',
+            items: { $ref: '#/definitions/referenced' }
+          },
+          child: {
+            type: 'object',
+            properties: {
+              foo: { $ref: '#/definitions/referenced' },
+              array: {
+                type: 'array',
+                items: { $ref: '#/definitions/referenced' }
+              }
+            }
+          }
+        },
+        definitions: {
+          referenced: {
+            properties: {
+              foo: { type: 'object' }
+            }
+          }
+        }
+      };
+      const schema = new Schema(jsonSchema);
+      expect(schema).to.exist;
+    });
+  });
+
   describe('validate', () => {
     it('validates required value', () => {
       const schemaDef = createBaseSchema();

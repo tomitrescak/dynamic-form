@@ -1,5 +1,5 @@
 import { observable, toJS } from 'mobx';
-import { types, getRoot, getParent } from 'mobx-state-tree';
+import { types, getRoot, getParent, detach } from 'mobx-state-tree';
 import Ajv from 'ajv';
 
 import { Schema } from './data_schema_model';
@@ -7,7 +7,10 @@ import { config } from './config';
 
 export type IValidator = (input: string) => string;
 
-export type DataSet<T = {}> = typeof FormStore.Type & Readonly<T>;
+export type DataSet<T = {}> = typeof FormStore.Type &
+  Readonly<T> & {
+    parent: DataSet<T>;
+  };
 
 export type ValidationResult = {
   required: number;
@@ -89,8 +92,11 @@ export const FormStore = types
     errors: observable.map({})
   }))
   .views(self => ({
-    get parent() {
-      return getParent(self, 2);
+    get parent(): DataSet {
+      try {
+        return getParent(self, 2);
+      } catch {}
+      return null;
     },
     getValue(item: string): any {
       if (!item) {
@@ -119,6 +125,17 @@ export const FormStore = types
         return s[first].getError(rest.join('.'));
       }
       return self.errors.get(item);
+    },
+    setError(item: string, error: string): void {
+      let s: any = self;
+      if (item.indexOf('.') > 0) {
+        let [first, ...rest] = item.split('.');
+        if (Array.isArray(s[first])) {
+          s[first][parseInt(rest[0])].setError(rest.slice(1).join('.'));
+        }
+        s[first].setError(rest.join('.'));
+      }
+      self.errors.set(item, error);
     }
   }))
   .actions(() => ({
@@ -145,6 +162,12 @@ export const FormStore = types
         self.getValue(key).push(data);
 
         this.validateField(key);
+      },
+      mapRemove(key: string, mapKey: string) {
+        self.getValue(key).delete(mapKey);
+      },
+      detach(node: any) {
+        detach(node);
       },
       isRequired(key: string) {
         return self.getSchema(key).required;
@@ -173,6 +196,16 @@ export const FormStore = types
           this.validateField(key);
         }
       },
+      setMapValue(key: string, mapKey: string, value: any) {
+        self.getValue(key).set(mapKey, value);
+
+        this.validateField(key);
+      },
+      setArrayValue(key: string, index: number, value: any) {
+        self.getValue(key)[index] = value;
+
+        this.validateField(key);
+      },
       // clear all errors from the previous validation
       clearErrors() {
         self.errors.clear();
@@ -197,14 +230,15 @@ export const FormStore = types
         return JSON.stringify(this.toJS(), null, 2);
       },
       root() {
-        if (getRoot(self) == self) {
-          return self;
-        }
-        let parent = getParent(self) as any;
-        if (parent && parent.clearErrors) {
-          return parent.root();
-        }
-        return self;
+        return getRoot<DataSet>(self);
+        // if (getRoot(self) == self) {
+        //   return self;
+        // }
+        // let parent = getParent(self) as any;
+        // if (parent && parent.clearErrors) {
+        //   return parent.root();
+        // }
+        // return self;
       },
       validateDataset(assign = true): false | Ajv.ErrorObject[] {
         const rootSchema = self.getSchema().rootSchema();

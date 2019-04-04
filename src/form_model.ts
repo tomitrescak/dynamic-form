@@ -11,18 +11,20 @@ import { FormPreviewText } from './form_preview_text';
 
 export interface IFormElementOwner {
   elements?: FormElement[];
+  name?: string;
+  description?: string;
 }
 
 function formItemSort(a: FormElement, b: FormElement) {
   return a.row < b.row
     ? -1
     : a.row > b.row
-    ? 1
-    : a.column < b.column
-    ? -1
-    : a.column > b.column
-    ? 1
-    : 0;
+      ? 1
+      : a.column < b.column
+        ? -1
+        : a.column > b.column
+          ? 1
+          : 0;
 }
 
 /* =========================================================
@@ -35,7 +37,7 @@ export class FormModel {
   description: string;
   elements: FormElement[];
 
-  constructor(form: FormDefinition, jsonSchema: JSONSchema, data: any, setUndo = true) {
+  constructor(form: IFormElementOwner, jsonSchema: JSONSchema, data: any, setUndo = true) {
     this.name = form.name;
     this.description = form.description;
     this.elements = form.elements;
