@@ -77,16 +77,18 @@ export class Schema extends JSONSchemaBase {
   validator: Ajv.ValidateFunction;
 
   constructor(
-    schema: JSONSchema,
+    input: JSONSchema,
     { parent = null, required = false, key = null, definitions = null }: SchemaOptions = {}
   ) {
     super();
 
-    Object.assign(this, schema);
+    Object.assign(this, input);
 
     this.parent = parent;
-    this.expression = schema.expression;
+    this.expression = input.expression;
     this.key = key;
+
+    let schema = { ...input };
 
     if (definitions) {
       schema.definitions = { ...(schema.definitions || {}), ...definitions };
@@ -130,8 +132,8 @@ export class Schema extends JSONSchemaBase {
       this.items = new Schema(schema.items as JSONSchema, {
         parent: this.parent,
         key: this.key,
-        required: this.required
-        // definitions: schema.definitions
+        required: this.required,
+        definitions: schema.definitions
       });
     }
   }

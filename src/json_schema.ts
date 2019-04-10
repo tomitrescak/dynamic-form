@@ -134,6 +134,7 @@ export class JSONSchemaBase {
 }
 
 export class JSONSchema extends JSONSchemaBase {
+  uid?: string;
   properties?: {
     [key: string]: JSONSchema;
   };

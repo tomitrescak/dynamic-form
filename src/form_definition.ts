@@ -17,6 +17,7 @@ export type FormControl =
   | 'Map'
   | 'Modal'
   | 'Menu'
+  | 'PropertyView'
   | 'Radio'
   | 'RejectButton'
   | 'Repeater'
@@ -43,12 +44,14 @@ export interface PropMap {
 export type DropdownValue = { value: string; text: string; disabled?: boolean };
 
 export interface FormElement<T = any> {
+  uid?: string;
   row?: number;
   column?: number;
   css?: string;
   width?: number;
   source?: string;
   sourceRef?: string;
+  skipValidation?: boolean;
   label?: string;
   renderer?: string;
   handler?: string;
@@ -62,7 +65,7 @@ export interface FormElement<T = any> {
   controlProps?: PropMap;
   vertical?: boolean;
   options?: (owner: DataSet<T>) => DropdownValue[];
-  validate?: (value: any, owner: T) => string;
+  validate?: (value: any, owner: T, source: string) => string | void;
   visible?: (owner: DataSet<T>) => boolean;
   parse?: (value: string, prev: any, owner: T) => any;
   value?: (owner: DataSet<T>, source: string) => any;

@@ -8,7 +8,7 @@ import {
 import { UndoManager } from 'mst-middlewares';
 
 import { Schema } from './data_schema_model';
-import { FormStore } from './form_store';
+import { FormStore, DataSet } from './form_store';
 import { safeEval } from './form_utils';
 import { JSONSchema } from './json_schema';
 import { setUndoManager } from './undo_manager';
@@ -203,17 +203,21 @@ function addDefinitions(external: { [index: string]: any }) {
 
 export function buildStore<T = {}>(
   schema: Schema | JSONSchema,
-  externalDefinitions: { [index: string]: JSONSchema } = {},
-  addUndo = true
+  mergeDefinitions: { [index: string]: JSONSchema } = {},
+  addUndo = true,
+  preBuiltDefinitions: { [index: string]: DataSet } = {}
 ): IModelType<{}, Readonly<T> & FT> {
-  if (externalDefinitions) {
-    schema.definitions = { ...(schema.definitions || {}), ...(externalDefinitions as any) };
+  if (mergeDefinitions) {
+    schema.definitions = { ...(schema.definitions || {}), ...(mergeDefinitions as any) };
   }
   if (!(schema instanceof Schema)) {
     schema = new Schema(schema);
   }
   // prepare internal definitions
-  let definitions: { [index: string]: any } = addDefinitions(schema.definitions);
+  let definitions: { [index: string]: any } = {
+    ...addDefinitions(schema.definitions),
+    ...preBuiltDefinitions
+  };
 
   // prepare model and views
   return buildTree(schema, definitions, addUndo) as IModelType<{}, Readonly<T> & FT>;

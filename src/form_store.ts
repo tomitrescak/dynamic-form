@@ -92,9 +92,28 @@ export const FormStore = types
     errors: observable.map({})
   }))
   .views(self => ({
+    /** Return an object parent */
     get parent(): DataSet {
       try {
-        return getParent(self, 2);
+        let level = 1;
+        let parent = null;
+        do {
+          parent = getParent<DataSet>(self, level++);
+          if (
+            parent &&
+            parent.constructor &&
+            (parent.constructor.name === 'object' || parent.constructor.name === 'Object')
+          ) {
+            return parent;
+          }
+        } while (parent != null);
+      } catch {}
+      return null;
+    },
+    /** Return immediate parent (getParent(1)) */
+    get immediateParent(): DataSet {
+      try {
+        return getParent<DataSet>(self, 1);
       } catch {}
       return null;
     },
@@ -184,7 +203,17 @@ export const FormStore = types
       removeRowIndex(key: string, index: number) {
         store[key].splice(index, 1);
       },
-      setValue(key: string, value: any): void {
+      executeAction<T>(action: (owner?: T) => any): any {
+        action(self as any);
+      },
+      dataSetAction<T>(action: (owner?: T) => any) {
+        return () => action(self as any);
+      },
+      setValue<T>(
+        key: string,
+        value: any,
+        validate: (value: any, owner: T, source: string) => undefined | any = null
+      ): void {
         if (key.indexOf('.') > 0) {
           let [first, ...rest] = key.split('.');
           return (self as any)[first].setValue(rest.join('.'), value);
@@ -192,8 +221,20 @@ export const FormStore = types
           // set value for validation
           setValue(key, self.getSchema(key).tryParse(value));
 
-          // validate
-          this.validateField(key);
+          // if there is validation function perform it
+          //  if function returns value, set error
+          //  if function return undefined, it is probably async function and do nothing
+          //  if function return anything else continue validation with json schema
+          if (validate) {
+            let error = validate(value, self as any, key);
+            if (error) {
+              self.setError(key, error);
+            } else if (error !== undefined) {
+              this.validateField(key);
+            }
+          } else {
+            this.validateField(key);
+          }
         }
       },
       setMapValue(key: string, mapKey: string, value: any) {
