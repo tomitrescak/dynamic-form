@@ -1,30 +1,23 @@
 import Ajv from 'ajv';
 
 import { Schema } from './data_schema_model';
-import { DataSet, ValidationResult } from './form_store';
+import { DataSet } from './form_store';
 import { buildStore } from './mst_builder';
 import { setUndoManager } from './undo_manager';
-import { FormElement, FormDefinition } from './form_definition';
+import {
+  FormElement,
+  FormComponentCatalogue,
+  EditorFormComponentCatalogue
+} from './form_definition';
 import { JSONSchema } from './json_schema';
-import { FormPreviewHtml } from './form_preview_html';
+// import { FormPreviewHtml } from './form_preview_html';
 import { FormPreviewText } from './form_preview_text';
+import { FormPreviewHtml } from './form_preview_html';
 
 export interface IFormElementOwner {
   elements?: FormElement[];
   name?: string;
   description?: string;
-}
-
-function formItemSort(a: FormElement, b: FormElement) {
-  return a.row < b.row
-    ? -1
-    : a.row > b.row
-      ? 1
-      : a.column < b.column
-        ? -1
-        : a.column > b.column
-          ? 1
-          : 0;
 }
 
 /* =========================================================
@@ -36,14 +29,12 @@ export class FormModel {
   name: string;
   description: string;
   elements: FormElement[];
+  catalogue: FormComponentCatalogue;
 
   constructor(form: IFormElementOwner, jsonSchema: JSONSchema, data: any, setUndo = true) {
     this.name = form.name;
     this.description = form.description;
     this.elements = form.elements;
-
-    // sort elements by row and column
-    this.elements.sort(formItemSort);
 
     // create dataset
     if (jsonSchema) {
@@ -59,12 +50,12 @@ export class FormModel {
 
   createHtmlPreview() {
     let formPreview = new FormPreviewHtml();
-    return formPreview.render(this, this.dataSet);
+    return formPreview.render(this, this.dataSet, this.catalogue);
   }
 
   createTextPreview() {
     let textPreview = new FormPreviewText();
-    return textPreview.render(this, this.dataSet);
+    return textPreview.render(this, this.dataSet, this.catalogue);
   }
 
   validateWithReport(

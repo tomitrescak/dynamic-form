@@ -8,9 +8,6 @@ export const create = {
     ...form
   }),
   formElement: (formElement: Partial<FormElement> = {}): FormElement => ({
-    row: 0,
-    column: 0,
-    width: 0,
     source: 'source',
     label: 'Label',
     inline: false,

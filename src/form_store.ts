@@ -194,8 +194,12 @@ export const FormStore = types
       parseValue(key: string, value: any) {
         return self.getSchema(key).tryParse(value);
       },
+      insertRow<T>(key: string, index: number, data: T) {
+        store[key].splice(index, 0, data);
+        return store[key][index];
+      },
       removeRow(key: string, index: number) {
-        store[key].splice(index);
+        store[key].splice(index, 1);
       },
       removeRowData<T>(key: string, data: T) {
         store[key].remove(data);
@@ -212,7 +216,7 @@ export const FormStore = types
       setValue<T>(
         key: string,
         value: any,
-        validate: (value: any, owner: T, source: string) => undefined | any = null
+        validate: (owner: T, args: { value: any; source: string }) => undefined | any = null
       ): void {
         if (key.indexOf('.') > 0) {
           let [first, ...rest] = key.split('.');
@@ -226,7 +230,7 @@ export const FormStore = types
           //  if function return undefined, it is probably async function and do nothing
           //  if function return anything else continue validation with json schema
           if (validate) {
-            let error = validate(value, self as any, key);
+            let error = validate(self as any, { value, source: key });
             if (error) {
               self.setError(key, error);
             } else if (error !== undefined) {

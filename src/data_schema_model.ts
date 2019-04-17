@@ -64,6 +64,7 @@ type SchemaOptions = {
 
 export class Schema extends JSONSchemaBase {
   // store: typeof FormStore.Type;
+  originalSchema: JSONSchema;
   parent: Schema;
   properties: { [index: string]: Schema };
   definitions: { [index: string]: Schema };
@@ -84,6 +85,7 @@ export class Schema extends JSONSchemaBase {
 
     Object.assign(this, input);
 
+    this.originalSchema = input;
     this.parent = parent;
     this.expression = input.expression;
     this.key = key;

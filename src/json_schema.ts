@@ -1,3 +1,5 @@
+import { Option } from './form_definition';
+
 export type JSONSchema7Version =
   | 'http://json-schema.org/schema#'
   | 'http://json-schema.org/hyper-schema#'
@@ -27,13 +29,6 @@ export type ErrorMessages = {
 
 export type ErrorMessage = string | ErrorMessages;
 
-export type EnumOption = {
-  [index: string]: string;
-  text: string;
-  value: string;
-  icon?: string;
-};
-
 export class JSONSchemaBase {
   /* =========================================================
       OVERRIDEN
@@ -60,7 +55,7 @@ export class JSONSchemaBase {
   $schema?: JSONSchema7Version;
   $comment?: string;
   $import?: string;
-  $enum?: EnumOption[];
+  $enum?: Option[];
 
   /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-6.2

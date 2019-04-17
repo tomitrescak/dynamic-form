@@ -1,6 +1,23 @@
 export { config } from './config';
 export { Schema } from './data_schema_model';
-export { FormControl, FormDefinition, FormElement, DropdownValue } from './form_definition';
+export {
+  FormComponent,
+  FormDefinition,
+  FormElement,
+  FormComponentCatalogue,
+  FormComponentProps,
+  EditorFormComponent,
+  EditorFormComponentCatalogue,
+  EditorFormComponentProps,
+  Option,
+  PropMap,
+  FormViewProps,
+  EditorFormViewProps,
+  Handler,
+  Handlers,
+  ParseHandler,
+  ValidateHandler
+} from './form_definition';
 export { FormModel } from './form_model';
 export { DataSet, FormStore } from './form_store';
 export { plural, random, safeEval } from './form_utils';

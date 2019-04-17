@@ -50,91 +50,73 @@ describe('Preview', () => {
         description: 'Desc',
         elements: [
           {
-            column: 0,
-            row: 0,
-            width: 4,
+            controlProps: {
+              column: 0,
+              row: 0,
+              width: 4
+            },
             label: 'Input Label',
             source: 'input',
             control: 'Input'
           },
           {
-            row: 0,
-            column: 6,
-            width: 3,
+            controlProps: { row: 0, column: 6, width: 3 },
             label: 'Formula Label',
             source: 'formula',
             control: 'Formula'
           },
           {
-            row: 0,
-            column: 15,
-            width: 1,
+            controlProps: { row: 0, column: 15, width: 1 },
             label: 'Text Label',
             source: 'text',
             control: 'Text'
           },
           {
-            row: 1,
-            column: 3,
-            width: 5,
+            controlProps: { row: 1, column: 3, width: 5 },
             label: 'Select Label',
             source: 'select',
             control: 'Select',
             list: 'select'
           },
           {
-            row: 1,
-            column: 10,
-            width: 1,
+            controlProps: { row: 1, column: 10, width: 1 },
             label: 'Check Yes',
             source: 'checkYes',
             control: 'Checkbox'
           },
           {
-            row: 1,
-            column: 11,
-            width: 1,
+            controlProps: { row: 1, column: 11, width: 1 },
             label: 'Check No',
             source: 'checkNo',
             control: 'Checkbox'
           },
           {
-            row: 1,
-            column: 15,
-            width: 1,
+            controlProps: { row: 1, column: 15, width: 1 },
             label: 'Radio',
             source: 'radio',
             control: 'Radio',
             list: 'radio'
           },
           {
-            row: 1,
-            column: 16,
-            width: 1,
+            controlProps: { row: 1, column: 16, width: 1 },
             label: 'Dean Signature',
             source: 'signature',
             control: 'Signature'
           },
           {
-            row: 2,
-            column: 0,
-            width: 8,
+            controlProps: { row: 2, column: 0, width: 8 },
             label: 'Repeater Label',
             source: 'repeater',
             control: 'Repeater',
             elements: [
               {
-                column: 0,
-                row: 0,
-                width: 8,
+                controlProps: { column: 0, row: 0, width: 8 },
                 label: 'IR Label 1',
                 source: 'input',
                 control: 'Input'
               },
               {
-                column: 8,
-                row: 0,
-                width: 8,
+                controlProps: { column: 8, row: 0, width: 8 },
                 label: 'IR Label 2',
                 source: 'input',
                 control: 'Input'
@@ -142,21 +124,19 @@ describe('Preview', () => {
             ]
           },
           {
-            row: 2,
-            column: 9,
-            width: 3,
+            controlProps: { row: 2, column: 9, width: 3 },
             label: 'Table Label',
             source: 'repeater',
             control: 'Table',
             elements: [
               {
-                width: 8,
+                controlProps: { width: 8 },
                 label: 'IR Label 1',
                 source: 'input',
                 control: 'Input'
               },
               {
-                width: 8,
+                controlProps: { width: 8 },
                 label: 'IR Label 2',
                 source: 'input',
                 control: 'Input'
@@ -164,17 +144,13 @@ describe('Preview', () => {
             ]
           },
           {
-            row: 3,
-            column: 0,
-            width: 16,
+            controlProps: { row: 3, column: 0, width: 16 },
             label: 'Form Label',
             source: 'form',
             control: 'Form',
             elements: [
               {
-                row: 0,
-                column: 0,
-                width: 16,
+                controlProps: { row: 0, column: 0, width: 16 },
                 label: 'Item Label',
                 source: 'input',
                 control: 'Input'
@@ -372,12 +348,12 @@ it('sorts form fields when form is created', () => {
   let model = new FormModel(
     create.form({
       elements: [
-        create.formElement({ row: 3, column: 2, width: 6, label: '6' }),
-        create.formElement({ row: 3, column: 2, width: 6, label: '5' }),
-        create.formElement({ row: 0, column: 8, width: 6, label: '2' }),
-        create.formElement({ row: 2, column: 2, width: 6, label: '3' }),
-        create.formElement({ row: 2, column: 8, width: 6, label: '4' }),
-        create.formElement({ row: 0, column: 0, width: 6, label: '1' })
+        create.formElement({ controlProps: { row: 3, column: 2, width: 6 }, label: '6' }),
+        create.formElement({ controlProps: { row: 3, column: 2, width: 6 }, label: '5' }),
+        create.formElement({ controlProps: { row: 0, column: 8, width: 6 }, label: '2' }),
+        create.formElement({ controlProps: { row: 2, column: 2, width: 6 }, label: '3' }),
+        create.formElement({ controlProps: { row: 2, column: 8, width: 6 }, label: '4' }),
+        create.formElement({ controlProps: { row: 0, column: 0, width: 6 }, label: '1' })
       ]
     }),
     null,
