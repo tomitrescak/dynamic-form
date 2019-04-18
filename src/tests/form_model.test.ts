@@ -72,11 +72,10 @@ describe('Preview', () => {
             control: 'Text'
           },
           {
-            controlProps: { row: 1, column: 3, width: 5 },
+            controlProps: { row: 1, column: 3, width: 5, list: 'select' },
             label: 'Select Label',
             source: 'select',
-            control: 'Select',
-            list: 'select'
+            control: 'Select'
           },
           {
             controlProps: { row: 1, column: 10, width: 1 },
@@ -91,11 +90,10 @@ describe('Preview', () => {
             control: 'Checkbox'
           },
           {
-            controlProps: { row: 1, column: 15, width: 1 },
+            controlProps: { row: 1, column: 15, width: 1, list: 'radio' },
             label: 'Radio',
             source: 'radio',
-            control: 'Radio',
-            list: 'radio'
+            control: 'Radio'
           },
           {
             controlProps: { row: 1, column: 16, width: 1 },

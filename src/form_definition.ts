@@ -32,8 +32,8 @@ export type FormComponentProps<U = FormElement, T = DataSet> = {
 
 export type FormComponent<U = FormElement, T = any> = {
   Component: React.ComponentType<FormComponentProps<U, T>>;
-  toString?(formElement: U, owner: DataSet<T>, catalogue: FormComponentCatalogue<U, T>): string;
-  toHtml?(formElement: U, owner: DataSet<T>, catalogue: FormComponentCatalogue<U, T>): string;
+  toString?(formElement: U, owner: DataSet<T>, catalogue: FormComponentCatalogue): string;
+  toHtml?(formElement: U, owner: DataSet<T>, catalogue: FormComponentCatalogue): string;
 };
 
 export type FormComponentCatalogue<U = FormElement, T = any> = {
@@ -51,19 +51,11 @@ export type Option = {
   type?: string;
 };
 
-export type EditorFormComponentProps = {
-  text: string;
-  value: string;
-  options?: Option[];
-  help?: string;
-  type?: string;
-};
-
-export type EditorFormComponent = {
-  Component: React.ComponentType<FormComponentProps>;
+export type EditorComponent<U = FormElement, T = any> = {
+  Component: React.ComponentType<FormComponentProps<U, T>>;
   modifiers?: FormElement[];
-  componentPropDefinitions?: JSONSchema;
-  childPropDefinitions?: JSONSchema;
+  componentPropDefinitions?: { [index: string]: JSONSchema };
+  childPropDefinitions?: { [index: string]: JSONSchema };
   control: string;
   icon: string;
   title: string;
@@ -71,8 +63,8 @@ export type EditorFormComponent = {
   componentProps?: { [index: string]: any };
 };
 
-export type EditorFormComponentCatalogue = {
-  components: { [index: string]: EditorFormComponent };
+export type EditorComponentCatalogue<U = EditorComponent> = {
+  components: { [index: string]: U };
   cssClass: string;
 };
 
@@ -82,57 +74,68 @@ export type FormViewProps = {
   formElement: FormElement;
   extensions?: FormExtension[];
   owner: DataSet;
-  catalogue: FormComponentCatalogue;
+  catalogue: FormComponentCatalogue<any>;
   handlers?: { [index: string]: any };
   readOnly?: boolean;
 };
 
-export type EditorFormViewProps = {
-  formElement: FormElement;
-  owner: DataSet;
-  catalogue: EditorFormComponentCatalogue;
+export type EditorFormViewProps<U, T = DataSet> = {
+  formElement: U;
+  owner: T;
+  catalogue: FormComponentCatalogue<U>;
   handlers?: { [index: string]: any };
   readOnly?: boolean;
 };
 
-export interface FormDefinition<T = any, H = any> {
+export interface FormDefinition<H = any> {
   name: string;
   description?: string;
-  elements?: FormElement<T, H>[];
+  elements?: FormElement<any, any, H>[];
 }
 
 export interface PropMap {
   [index: string]: any;
 }
 
-export interface FormElement<T = any, H = any> {
+export interface FormElement<O = any, C = any, H = any> {
+  // text?: string;
+
+  // list?: string;
+  // filterSource?: string;
+  // filterColumn?: string;
+  // options?: keyof H;
+
+  // vertical?: boolean;
+
+  // target?: string;
+  // inline?: boolean;
+
+  // type?: string;
+
+  // handler?: keyof H;
+  // renderer?: string;
+
+  // sourceRef?: string;
+
+  inline?: boolean;
   uid?: string;
+  label?: string;
+  info?: string;
   css?: string;
   source?: string;
-  sourceRef?: string;
-  type?: string;
-  skipValidation?: boolean;
-  label?: string;
-  text?: string;
-  renderer?: string;
-  handler?: keyof H;
-  inline?: boolean;
-  parent?: FormElement<T, H>;
-  list?: string;
-  readOnly?: boolean;
-  filterSource?: string;
-  filterColumn?: string;
   control?: string;
-  controlProps?: PropMap;
-  vertical?: boolean;
-  options?: keyof H;
-  validate?: keyof H;
-  visible?: keyof H;
-  parse?: keyof H;
-  value?: keyof H;
-  info?: string;
-  elements?: FormElement<T, H>[];
-  target?: string;
+  controlProps?: O;
+  readOnly?: boolean;
+  skipValidation?: boolean;
+  parent?: FormElement<any, any, H>;
+  elements?: FormElement<C, any, H>[];
+
+  controlHandlers?: keyof H;
+  validateHandler?: keyof H;
+  visibleHandler?: keyof H;
+  parseHandler?: keyof H;
+  valueHandler?: keyof H;
+  optionsHandler?: keyof H;
 }
 
 // options?: (owner: DataSet<T>) => Option[];

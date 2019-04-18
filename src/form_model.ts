@@ -4,11 +4,7 @@ import { Schema } from './data_schema_model';
 import { DataSet } from './form_store';
 import { buildStore } from './mst_builder';
 import { setUndoManager } from './undo_manager';
-import {
-  FormElement,
-  FormComponentCatalogue,
-  EditorFormComponentCatalogue
-} from './form_definition';
+import { FormElement, FormComponentCatalogue } from './form_definition';
 import { JSONSchema } from './json_schema';
 // import { FormPreviewHtml } from './form_preview_html';
 import { FormPreviewText } from './form_preview_text';
@@ -32,6 +28,7 @@ export class FormModel {
   catalogue: FormComponentCatalogue;
 
   constructor(form: IFormElementOwner, jsonSchema: JSONSchema, data: any, setUndo = true) {
+    this.addControlProps(form.elements);
     this.name = form.name;
     this.description = form.description;
     this.elements = form.elements;
@@ -44,6 +41,17 @@ export class FormModel {
       // set undo manager
       if (setUndo) {
         setUndoManager(this.dataSet);
+      }
+    }
+  }
+
+  addControlProps(elements: FormElement[]) {
+    for (let element of elements) {
+      if (!element.controlProps) {
+        element.controlProps = {};
+      }
+      if (element.elements) {
+        this.addControlProps(element.elements);
       }
     }
   }

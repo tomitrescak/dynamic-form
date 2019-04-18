@@ -10,13 +10,8 @@ export const create = {
   formElement: (formElement: Partial<FormElement> = {}): FormElement => ({
     source: 'source',
     label: 'Label',
-    inline: false,
-    list: null,
-    filterSource: null,
-    filterColumn: null,
     control: null,
     controlProps: null,
-    vertical: false,
     elements: [],
     ...formElement
   }),
