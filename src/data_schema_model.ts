@@ -6,7 +6,7 @@ import Ajv from 'ajv';
 
 import { getRoot, getPath, IAnyStateTreeNode } from 'mobx-state-tree';
 
-import { JSONSchemaType, JSONSchema, JSONSchemaBase } from './json_schema';
+import { JSONSchema, JSONSchemaBase } from './json_schema';
 import { safeEval } from './form_utils';
 import { DataSet } from './form_store';
 
@@ -74,6 +74,7 @@ export class Schema extends JSONSchemaBase {
   enum: ListItem[];
   key: string;
   default: any;
+  anyOf: JSONSchema[];
 
   validator: Ajv.ValidateFunction;
 
@@ -192,7 +193,7 @@ export class Schema extends JSONSchemaBase {
     return path;
   }
 
-  static reassignErrors(errors: any[], schema: JSONSchemaBase) {
+  static reassignErrors(errors: any[]) {
     if (!Array.isArray(errors)) {
       return errors;
     }
@@ -288,7 +289,7 @@ export class Schema extends JSONSchemaBase {
     let validator = this.validator;
 
     if (!validator(cleanData) as any) {
-      return Schema.reassignErrors(validator.errors, this);
+      return Schema.reassignErrors(validator.errors);
     }
     return false;
   }

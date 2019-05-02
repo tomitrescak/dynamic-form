@@ -1,7 +1,7 @@
 import { fake } from 'sinon';
 
 import { JSONSchema } from '../json_schema';
-import { FormElement, FormDefinition } from '../form_definition';
+import { FormElement } from '../form_definition';
 import { FormModel } from '../form_model';
 import { config } from '../config';
 
@@ -19,8 +19,7 @@ describe('FormModel: validation', () => {
       },
       required: ['code']
     };
-    const form: FormDefinition = {
-      name: 'Cool Form',
+    const form: FormElement = {
       elements: [
         {
           control: 'Input',
@@ -57,8 +56,7 @@ describe('FormModel: validation', () => {
         }
       }
     };
-    const form: FormDefinition = {
-      name: 'Cool Form',
+    const form: FormElement = {
       elements: [
         {
           control: 'Input',

@@ -1,17 +1,11 @@
-import { FormDefinition, FormElement } from '../form_definition';
+import { FormElement } from '../form_definition';
 
 export const create = {
-  form: (form: Partial<FormDefinition> = {}): FormDefinition => ({
-    name: 'Form',
-    description: 'Test Form',
-    elements: form.elements,
-    ...form
-  }),
   formElement: (formElement: Partial<FormElement> = {}): FormElement => ({
     source: 'source',
     label: 'Label',
     control: null,
-    controlProps: null,
+    props: null,
     elements: [],
     ...formElement
   }),

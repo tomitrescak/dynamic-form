@@ -21,23 +21,37 @@ type ValidateArgs = {
 };
 export type ValidateHandler<T> = Handler<T, ValidateArgs>;
 
-export type FormComponentProps<U = FormElement, T = DataSet> = {
-  owner: T;
-  formElement: U;
-  handlers?: Handlers<T>;
-  readOnly?: boolean;
+export type FormComponentProps<O = any, C = any, T = any> = {
   catalogue: FormComponentCatalogue;
-  renderControl?: (element: U, props: FormComponentProps<U, T>, ...other: any[]) => any;
+  formElement: FormElement<O, C>;
+  handlers?: Handlers<DataSet<T>>;
+  owner: DataSet<T>;
+  readOnly?: boolean;
+  // renderControl?: (
+  //   element: FormElement<O, C>,
+  //   props: FormComponentProps<O, C, T>,
+  //   ...other: any[]
+  // ) => any;
 };
 
-export type FormComponent<U = FormElement, T = any> = {
-  Component: React.ComponentType<FormComponentProps<U, T>>;
-  toString?(formElement: U, owner: DataSet<T>, catalogue: FormComponentCatalogue): string;
-  toHtml?(formElement: U, owner: DataSet<T>, catalogue: FormComponentCatalogue): string;
+export type FormComponent<O = any, C = any, T = any> = {
+  Component: React.ComponentType<FormComponentProps<O, C, T>>;
+  manualCss?: boolean;
+  toString?(
+    formElement: FormElement<O, C>,
+    owner: DataSet<T>,
+    catalogue: FormComponentCatalogue
+  ): string;
+  toHtml?(
+    formElement: FormElement<O, C>,
+    owner: DataSet<T>,
+    catalogue: FormComponentCatalogue
+  ): string;
 };
 
-export type FormComponentCatalogue<U = FormElement, T = any> = {
-  components: { [index: string]: FormComponent<U, T> };
+export type FormComponentCatalogue = {
+  components: { [index: string]: FormComponent | React.ComponentType<any> };
+  manualCss?: boolean;
   cssClass: string;
 };
 
@@ -51,20 +65,35 @@ export type Option = {
   type?: string;
 };
 
-export type EditorComponent<U = FormElement, T = any> = {
-  Component: React.ComponentType<FormComponentProps<U, T>>;
-  modifiers?: FormElement[];
-  componentPropDefinitions?: { [index: string]: JSONSchema };
-  childPropDefinitions?: { [index: string]: JSONSchema };
-  control: string;
-  icon: string;
-  title: string;
-  defaultChildren?: FormElement[];
-  componentProps?: { [index: string]: any };
+export type PropMap = { [index: string]: Prop };
+
+export type Prop = {
+  control: FormElement;
+  schema?: JSONSchema;
 };
 
-export type EditorComponentCatalogue<U = EditorComponent> = {
-  components: { [index: string]: U };
+export type EditorComponent<O = any, C = any, T = any> = {
+  Component: React.ComponentType<FormComponentProps<O, C, T>>;
+
+  props?: PropMap;
+  childProps?: PropMap;
+  control: string;
+  group?: string;
+  icon?: string;
+  thumbnail?: {
+    light: string;
+    dark: string;
+  };
+  title: string;
+  defaultChildren?: FormElement[];
+  defaultProps?: { [index: string]: any };
+  manualCss?: boolean;
+  unbound?: boolean;
+  handlers?: any;
+};
+
+export type EditorComponentCatalogue = {
+  components: { [index: string]: EditorComponent };
   cssClass: string;
 };
 
@@ -74,28 +103,18 @@ export type FormViewProps = {
   formElement: FormElement;
   extensions?: FormExtension[];
   owner: DataSet;
-  catalogue: FormComponentCatalogue<any>;
+  catalogue: FormComponentCatalogue;
   handlers?: { [index: string]: any };
   readOnly?: boolean;
 };
 
-export type EditorFormViewProps<U, T = DataSet> = {
-  formElement: U;
+export type EditorFormViewProps<O, C, T = DataSet> = {
+  formElement: FormElement<O, C>;
   owner: T;
-  catalogue: FormComponentCatalogue<U>;
+  catalogue: FormComponentCatalogue;
   handlers?: { [index: string]: any };
   readOnly?: boolean;
 };
-
-export interface FormDefinition<H = any> {
-  name: string;
-  description?: string;
-  elements?: FormElement<any, any, H>[];
-}
-
-export interface PropMap {
-  [index: string]: any;
-}
 
 export interface FormElement<O = any, C = any, H = any> {
   // text?: string;
@@ -115,28 +134,32 @@ export interface FormElement<O = any, C = any, H = any> {
   // handler?: keyof H;
   // renderer?: string;
 
-  // sourceRef?: string;
-
   inline?: boolean;
   uid?: string;
   label?: string;
-  info?: string;
+  documentation?: string;
+  group?: string;
+  tuple?: string;
+  tupleOrder?: number;
   css?: string;
   source?: string;
   control?: string;
-  controlProps?: O;
+  props?: O;
   readOnly?: boolean;
   skipValidation?: boolean;
   parent?: FormElement<any, any, H>;
   elements?: FormElement<C, any, H>[];
+  pages?: FormElement<C, any, H>[];
 
-  controlHandlers?: keyof H;
   validateHandler?: keyof H;
   visibleHandler?: keyof H;
   parseHandler?: keyof H;
   valueHandler?: keyof H;
   optionsHandler?: keyof H;
 }
+
+// type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+// type SafeElement<U = any, C = any> = Omit<FormElement<U, C>, 'controlProps'>;
 
 // options?: (owner: DataSet<T>) => Option[];
 //     validate?: (value: any, owner: T, source: string) => string | void;

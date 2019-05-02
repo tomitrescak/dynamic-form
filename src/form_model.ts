@@ -25,13 +25,17 @@ export class FormModel {
   name: string;
   description: string;
   elements: FormElement[];
+  pages: FormElement[];
   catalogue: FormComponentCatalogue;
+  formDefinition: FormElement;
 
-  constructor(form: IFormElementOwner, jsonSchema: JSONSchema, data: any, setUndo = true) {
-    this.addControlProps(form.elements);
-    this.name = form.name;
-    this.description = form.description;
-    this.elements = form.elements;
+  constructor(form: FormElement, jsonSchema: JSONSchema, data: any, setUndo = true) {
+    let formWithProps = this.addControlProps(form);
+    this.name = formWithProps.label;
+    this.description = formWithProps.documentation;
+    this.elements = formWithProps.elements;
+    this.formDefinition = formWithProps;
+    this.pages = formWithProps.pages;
 
     // create dataset
     if (jsonSchema) {
@@ -45,15 +49,39 @@ export class FormModel {
     }
   }
 
-  addControlProps(elements: FormElement[]) {
-    for (let element of elements) {
-      if (!element.controlProps) {
-        element.controlProps = {};
-      }
-      if (element.elements) {
-        this.addControlProps(element.elements);
-      }
+  addArrayProps(parent: FormElement, elements: FormElement[]) {
+    let result = [];
+    for (let e of elements) {
+      let child = this.addControlProps(e);
+      child.parent = parent;
+      result.push(child);
     }
+    return result;
+  }
+
+  addControlProps(element: FormElement) {
+    if (!element) {
+      return;
+    }
+    let result = { ...element };
+    if (!element.props) {
+      result.props = {};
+    } else {
+      result.props = { ...element.props };
+    }
+    if (!result.props.control) {
+      result.props.control = element.control;
+    }
+
+    if (result.elements) {
+      result.elements = this.addArrayProps(result, result.elements);
+    }
+
+    if (result.pages) {
+      result.pages = this.addArrayProps(result, result.pages);
+    }
+
+    return result;
   }
 
   createHtmlPreview() {

@@ -143,7 +143,7 @@
 //   }
 // }
 
-import { FormElement, FormComponentCatalogue } from './form_definition';
+import { FormElement, FormComponentCatalogue, FormComponent } from './form_definition';
 import { DataSet } from './form_store';
 
 export interface IFieldOwner {
@@ -195,7 +195,11 @@ export class FormPreviewHtml {
 
   render(formControl: FormElement, owner: DataSet, catalogue: FormComponentCatalogue) {
     return formControl.elements
-      .map(row => catalogue.components[row.control].toHtml(row, owner, catalogue))
+      .map(
+        row =>
+          (catalogue.components[row.control] as FormComponent).toHtml &&
+          (catalogue.components[row.control] as FormComponent).toHtml(row, owner, catalogue)
+      )
       .join('\n');
   }
 }

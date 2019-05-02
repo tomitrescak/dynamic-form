@@ -1,5 +1,5 @@
 import { JSONSchema } from './json_schema';
-import { FormElement, FormDefinition } from './form_definition';
+import { FormElement } from './form_definition';
 
 type Resource = {
   type: string;
@@ -14,7 +14,7 @@ export function generateSchema(schema: any, resources: Resource[]) {
   };
 
   for (let form of forms) {
-    let f = JSON.parse(form.content) as FormDefinition;
+    let f = JSON.parse(form.content) as FormElement;
 
     copyElements(f.elements, schema, finalSchema);
   }

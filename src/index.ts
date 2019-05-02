@@ -2,13 +2,13 @@ export { config } from './config';
 export { Schema } from './data_schema_model';
 export {
   FormComponent,
-  FormDefinition,
   FormElement,
   FormComponentCatalogue,
   FormComponentProps,
   EditorComponent,
   Option,
   PropMap,
+  Prop,
   FormViewProps,
   EditorFormViewProps,
   EditorComponentCatalogue,

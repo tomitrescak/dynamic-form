@@ -97,17 +97,38 @@ function buildTree(schema: Schema, definitions: any = null, addUndo = false) {
   /* =========================================================
     EXPRESSIONS
     ======================================================== */
-  if (!schema.properties) {
-    throw new Error('Schema does not contain any properties: ' + JSON.stringify(schema));
-  }
+  // if (!schema.properties) {
+  //   return;
+  //   throw new Error('Schema does not contain any properties: ' + JSON.stringify(schema));
+  // }
 
-  const properties = Object.getOwnPropertyNames(schema.properties);
+  // extract union types
+  // let unionTypes: { [index: string]: any } = {};
+  // if (schema.anyOf && schema.anyOf.length > 0) {
+  //   for (let option of schema.anyOf) {
+  //     if (option.properties) {
+  //       for (let property of Object.getOwnPropertyNames(option.properties)) {
+  //         if (!unionTypes[property]) {
+  //           unionTypes[property] = [];
+  //         }
+
+  //         unionTypes[property].push(buildTree(new Schema(option.properties[property])));
+  //       }
+  //     }
+  //   }
+  //   // now extract union types
+  //   for (let key of Object.getOwnPropertyNames(unionTypes)) {
+  //     unionTypes[key] = types.union({ eager: false }, unionTypes[key][0], unionTypes[key][1]);
+  //   }
+  // }
+  const schemaProperties = schema.properties || {};
+  const properties = Object.getOwnPropertyNames(schemaProperties);
 
   const viewDefinition = () => {
     const view = {};
 
     for (let key of properties) {
-      let node = schema.properties[key];
+      let node = schemaProperties[key];
 
       // console.log(key + ' ' + node.expression);
       // console.log(node.schema);
@@ -142,7 +163,7 @@ function buildTree(schema: Schema, definitions: any = null, addUndo = false) {
     .props(mstDefinition)
     .props(
       properties.reduce((previous: any, key: string) => {
-        let node = schema.properties[key];
+        let node = schemaProperties[key];
         let definition = mstTypeFactory(node, () => mst, definitions);
         if (definition) {
           previous[key] = types.maybe(definition);
@@ -161,11 +182,14 @@ function buildTree(schema: Schema, definitions: any = null, addUndo = false) {
           let property = schema;
           do {
             const first = parts.shift();
-            property = property.properties[first];
+            property = property.items
+              ? property.items.properties[first]
+              : property.properties[first];
+
             if (!property) {
               throw new Error(
                 `Could not find key '${first}' for key '${key}' in schema with properties [${Object.getOwnPropertyNames(
-                  schema.properties
+                  schemaProperties
                 ).join(',')}]`
               );
             }
@@ -173,11 +197,11 @@ function buildTree(schema: Schema, definitions: any = null, addUndo = false) {
           return property;
         }
 
-        const value = key ? schema.properties[key] : schema;
+        const value = key ? schemaProperties[key] : schema;
         if (!value) {
           throw new Error(
             `Could not find key '${key}' in schema with properties [${Object.getOwnPropertyNames(
-              schema.properties
+              schemaProperties
             ).join(',')}]`
           );
         }

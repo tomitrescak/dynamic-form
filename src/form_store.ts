@@ -1,5 +1,5 @@
 import { observable, toJS } from 'mobx';
-import { types, getRoot, getParent, detach } from 'mobx-state-tree';
+import { types, getRoot, getParent, detach, IMSTMap } from 'mobx-state-tree';
 import Ajv from 'ajv';
 
 import { Schema } from './data_schema_model';
@@ -86,6 +86,20 @@ type ToJsOptions = { replaceEmpty?: boolean; replaceDates?: boolean };
 
 // const errors = observable.map({});
 
+function getValue(item: any, key: string) {
+  if (item.get) {
+    return item.get(key);
+  }
+  return item.getValue(key);
+}
+
+function setValue(item: any, key: string, value: any) {
+  if (item.set) {
+    return item.set(key, value);
+  }
+  return item.setValue(key, value);
+}
+
 export const FormStore = types
   .model()
   .volatile(() => ({
@@ -127,10 +141,10 @@ export const FormStore = types
         let [first, ...rest] = item.split('.');
         if (Array.isArray(s[first])) {
           return rest.length > 1
-            ? s[first][parseInt(rest[0])].getValue(rest.slice(1).join('.'))
+            ? getValue(s[first][parseInt(rest[0])], rest.slice(1).join('.'))
             : s[first][parseInt(rest[0])];
         }
-        return s[first].getValue(rest.join('.'));
+        return getValue(s[first], rest.join('.'));
       }
       return s[item];
     },
@@ -196,6 +210,10 @@ export const FormStore = types
       },
       insertRow<T>(key: string, index: number, data: T) {
         store[key].splice(index, 0, data);
+        return store[key][index];
+      },
+      replaceRow<T>(key: string, index: number, data: T) {
+        store[key][index] = data;
         return store[key][index];
       },
       removeRow(key: string, index: number) {
