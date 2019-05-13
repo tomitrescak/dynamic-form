@@ -86,18 +86,40 @@ type ToJsOptions = { replaceEmpty?: boolean; replaceDates?: boolean };
 
 // const errors = observable.map({});
 
-function getValue(item: any, key: string) {
-  if (item.get) {
-    return item.get(key);
-  }
-  return item.getValue(key);
-}
+// function getValue(item: any, key: string) {
+//   if (!item) {
+//     return null;
+//   }
+//   if (item.get) {
+//     return item.get(key);
+//   }
+//   return item.getValue(key);
+// }
 
-function setValue(item: any, key: string, value: any) {
-  if (item.set) {
-    return item.set(key, value);
+// function setValue(item: any, key: string, value: any) {
+//   if (item.set) {
+//     return item.set(key, value);
+//   }
+//   return item.setValue(key, value);
+// }
+
+function processPath(item: string, s: any): any {
+  if (item && item[0] === '/') {
+    item = item.substring(1);
+    s = s.root(); // TODO: Possibly this should be set to root
   }
-  return item.setValue(key, value);
+  if (item.indexOf('.') > 0) {
+    let [first, ...rest] = item.split('.');
+    if (Array.isArray(s[first])) {
+      if (rest.length > 1) {
+        return processPath(rest.slice(1).join('.'), s[first][parseInt(rest[0])]);
+      } else {
+        return { owner: s[first], name: parseInt(rest[0]) };
+      }
+    }
+    return processPath(rest.join('.'), s[first]);
+  }
+  return { owner: s, name: item };
 }
 
 export const FormStore = types
@@ -132,47 +154,24 @@ export const FormStore = types
       return null;
     },
     getValue(item: string): any {
-      if (!item) {
-        return self;
-      }
-      let s: any = self;
-      // allow dot notation for obtaining values
-      if (item.indexOf('.') > 0) {
-        let [first, ...rest] = item.split('.');
-        if (Array.isArray(s[first])) {
-          return rest.length > 1
-            ? getValue(s[first][parseInt(rest[0])], rest.slice(1).join('.'))
-            : s[first][parseInt(rest[0])];
-        }
-        return getValue(s[first], rest.join('.'));
-      }
-      return s[item];
+      const { name, owner } = processPath(item, self);
+      return owner[name];
     },
     getError(item: string): string {
-      let s: any = self;
-      if (item.indexOf('.') > 0) {
-        let [first, ...rest] = item.split('.');
-        if (Array.isArray(s[first])) {
-          return s[first][parseInt(rest[0])].getError(rest.slice(1).join('.'));
-        }
-        return s[first].getError(rest.join('.'));
-      }
-      return self.errors.get(item);
+      const { name, owner } = processPath(item, self);
+      return owner.errors.get(name);
     },
     setError(item: string, error: string): void {
-      let s: any = self;
-      if (item.indexOf('.') > 0) {
-        let [first, ...rest] = item.split('.');
-        if (Array.isArray(s[first])) {
-          s[first][parseInt(rest[0])].setError(rest.slice(1).join('.'));
-        }
-        s[first].setError(rest.join('.'));
+      if (item.match(/(\.|\/)/)) {
+        const { name, owner } = processPath(item, self);
+        owner.setError(name, error);
+      } else {
+        self.errors.set(item, error);
       }
-      self.errors.set(item, error);
     }
   }))
   .actions(() => ({
-    getSchema(_key: string = null): Schema {
+    getSchema(_key: string = null, _throwError = true): Schema {
       throw new Error('Not implemented');
     }
   }))
@@ -180,24 +179,33 @@ export const FormStore = types
     const store: any = self;
 
     // const { defaultValue, validators, arrays, objects, descriptors } = self.privateHelpers();
-    function setValue(key: string, value: any) {
-      if (store[key] !== value) {
-        store[key] = value;
-        if (config.setDirty) {
-          config.setDirty(true);
-        }
+    // function setValue(key: string, value: any) {
+    //   if (store[key] !== value) {
+    //     store[key] = value;
+    //     if (config.setDirty) {
+    //       config.setDirty(true);
+    //     }
+    //   }
+    // }
+
+    function findOwner(key: string) {
+      let owner = self.getValue(key);
+      if (!owner) {
+        throw new Error(`Could not find value "${key}" in the store.`);
       }
+      return owner;
     }
 
     return {
       addRow(key: string, data?: any) {
         data = data || self.getSchema(key).items.defaultValue();
-        self.getValue(key).push(data);
+
+        findOwner(key).push(data);
 
         this.validateField(key);
       },
       mapRemove(key: string, mapKey: string) {
-        self.getValue(key).delete(mapKey);
+        findOwner(key).delete(mapKey);
       },
       detach(node: any) {
         detach(node);
@@ -209,21 +217,38 @@ export const FormStore = types
         return self.getSchema(key).tryParse(value);
       },
       insertRow<T>(key: string, index: number, data: T) {
-        store[key].splice(index, 0, data);
+        findOwner(key).splice(index, 0, data);
         return store[key][index];
       },
       replaceRow<T>(key: string, index: number, data: T) {
-        store[key][index] = data;
-        return store[key][index];
+        let owner = findOwner(key);
+        if (owner.length <= index + 1) {
+          for (let i = owner.length; i <= index + 1; i++) {
+            owner.push(undefined);
+          }
+        }
+        owner[index] = data;
+        return owner[index];
+      },
+      moveRow(key: string, from: number, to: number) {
+        let owner = findOwner(key);
+        let data: any;
+        if (from != null) {
+          data = toJS(owner[from]);
+          owner.splice(from, 1);
+        }
+        if (to != null) {
+          owner.splice(to, 0, data);
+        }
       },
       removeRow(key: string, index: number) {
-        store[key].splice(index, 1);
+        findOwner(key).splice(index, 1);
       },
       removeRowData<T>(key: string, data: T) {
-        store[key].remove(data);
+        findOwner(key).remove(data);
       },
       removeRowIndex(key: string, index: number) {
-        store[key].splice(index, 1);
+        findOwner(key).splice(index, 1);
       },
       executeAction<T>(action: (owner?: T) => any): any {
         action(self as any);
@@ -236,17 +261,17 @@ export const FormStore = types
         value: any,
         validate: (owner: T, args: { value: any; source: string }) => undefined | any = null
       ): void {
-        if (key.indexOf('.') > 0) {
-          let [first, ...rest] = key.split('.');
-          return (self as any)[first].setValue(rest.join('.'), value);
+        if (key.match(/(\.|\/)/)) {
+          const { name, owner } = processPath(key, self);
+          owner.setValue(name, value);
         } else {
-          // set value for validation
-          setValue(key, self.getSchema(key).tryParse(value));
+          if ((self as any)[key] !== value) {
+            (self as any)[key] = value;
+            if (config.setDirty) {
+              config.setDirty(true);
+            }
+          }
 
-          // if there is validation function perform it
-          //  if function returns value, set error
-          //  if function return undefined, it is probably async function and do nothing
-          //  if function return anything else continue validation with json schema
           if (validate) {
             let error = validate(self as any, { value, source: key });
             if (error) {
@@ -316,8 +341,13 @@ export const FormStore = types
         }
       },
       validateField(key: string) {
-        // find current schema
         let ownSchema = self.getSchema();
+
+        if (key.indexOf('.') > 0) {
+          let [first, ...rest] = key.split('.');
+          return store[first].validateField(rest.join('.'));
+        }
+        // find current schema
         let keys = [key];
         let field = ownSchema.properties[key];
 

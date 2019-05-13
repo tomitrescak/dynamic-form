@@ -27,6 +27,7 @@ export type FormComponentProps<O = any, C = any, T = any> = {
   handlers?: Handlers<DataSet<T>>;
   owner: DataSet<T>;
   readOnly?: boolean;
+  hideLabel?: boolean;
   // renderControl?: (
   //   element: FormElement<O, C>,
   //   props: FormComponentProps<O, C, T>,
@@ -88,7 +89,7 @@ export type EditorComponent<O = any, C = any, T = any> = {
   defaultChildren?: FormElement[];
   defaultProps?: { [index: string]: any };
   manualCss?: boolean;
-  unbound?: boolean;
+  bound?: boolean;
   handlers?: any;
 };
 

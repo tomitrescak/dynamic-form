@@ -84,14 +84,14 @@ function mstTypeFactory(desc: Schema, mst: any, definitions: any): any {
       if (!desc.properties) {
         return types.optional(PropMap, {});
       }
-      return types.optional(buildTree(desc), {});
+      return types.optional(buildTree(desc, definitions), {});
     case undefined:
       return types.string;
   }
   throw new Error('MST Type not supported: ' + desc.type);
 }
 
-function buildTree(schema: Schema, definitions: any = null, addUndo = false) {
+function buildTree(schema: Schema, definitions: any, addUndo = false) {
   // prepare model and views
 
   /* =========================================================
@@ -172,8 +172,12 @@ function buildTree(schema: Schema, definitions: any = null, addUndo = false) {
       }, {})
     )
     .views(viewDefinition)
-    .actions(() => ({
-      getSchema(key: string) {
+    .actions(self => ({
+      getSchema(key: string, throwError = true) {
+        if (key && key[0] === '/') {
+          key = key.substring(1);
+          schema = self.root().getSchema(); // TODO: Possibly this should be set to root
+        }
         if (!key) {
           return schema;
         }
@@ -187,11 +191,14 @@ function buildTree(schema: Schema, definitions: any = null, addUndo = false) {
               : property.properties[first];
 
             if (!property) {
-              throw new Error(
-                `Could not find key '${first}' for key '${key}' in schema with properties [${Object.getOwnPropertyNames(
-                  schemaProperties
-                ).join(',')}]`
-              );
+              if (throwError) {
+                throw new Error(
+                  `Could not find key '${first}' for key '${key}' in schema with properties [${Object.getOwnPropertyNames(
+                    schemaProperties
+                  ).join(',')}]`
+                );
+              }
+              return null;
             }
           } while (parts.length > 0);
           return property;
@@ -199,11 +206,14 @@ function buildTree(schema: Schema, definitions: any = null, addUndo = false) {
 
         const value = key ? schemaProperties[key] : schema;
         if (!value) {
-          throw new Error(
-            `Could not find key '${key}' in schema with properties [${Object.getOwnPropertyNames(
-              schemaProperties
-            ).join(',')}]`
-          );
+          if (throwError) {
+            throw new Error(
+              `Could not find key '${key}' in schema with properties [${Object.getOwnPropertyNames(
+                schemaProperties
+              ).join(',')}]`
+            );
+          }
+          return null;
         }
         return value;
       }
@@ -219,7 +229,7 @@ function addDefinitions(external: { [index: string]: any }) {
   if (external) {
     let definitionKeys = Object.getOwnPropertyNames(external);
     for (let key of definitionKeys) {
-      result[key] = buildTree(external[key] as any);
+      result[key] = buildTree(external[key] as any, null);
     }
   }
   return result;

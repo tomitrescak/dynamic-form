@@ -28,6 +28,7 @@ export class FormModel {
   pages: FormElement[];
   catalogue: FormComponentCatalogue;
   formDefinition: FormElement;
+  control = 'Form';
 
   constructor(form: FormElement, jsonSchema: JSONSchema, data: any, setUndo = true) {
     let formWithProps = this.addControlProps(form);
@@ -53,7 +54,10 @@ export class FormModel {
     let result = [];
     for (let e of elements) {
       let child = this.addControlProps(e);
-      child.parent = parent;
+
+      if (child) {
+        child.parent = parent;
+      }
       result.push(child);
     }
     return result;
