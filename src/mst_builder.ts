@@ -174,16 +174,17 @@ function buildTree(schema: Schema, definitions: any, addUndo = false) {
     .views(viewDefinition)
     .actions(self => ({
       getSchema(key: string, throwError = true) {
+        let currentSchema = schema;
+        if (!key) {
+          return currentSchema;
+        }
         if (key && key[0] === '/') {
           key = key.substring(1);
-          schema = self.root().getSchema(); // TODO: Possibly this should be set to root
-        }
-        if (!key) {
-          return schema;
+          currentSchema = self.root().getSchema(); // TODO: Possibly this should be set to root
         }
         if (key.indexOf('.') >= 0) {
           const parts = key.split('.');
-          let property = schema;
+          let property = currentSchema;
           do {
             const first = parts.shift();
             property = property.items
@@ -204,7 +205,7 @@ function buildTree(schema: Schema, definitions: any, addUndo = false) {
           return property;
         }
 
-        const value = key ? schemaProperties[key] : schema;
+        const value = key ? schemaProperties[key] : currentSchema;
         if (!value) {
           if (throwError) {
             throw new Error(

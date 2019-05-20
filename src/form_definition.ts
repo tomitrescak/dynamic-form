@@ -13,21 +13,23 @@ type ParseArgs = {
   current: any;
   previous: any;
 };
-export type ParseHandler<T> = Handler<T, ParseArgs>;
+export type ParseHandler<T, U = {}> = Handler<T, ParseArgs & U>;
 
 type ValidateArgs = {
   value: any;
   source: string;
 };
-export type ValidateHandler<T> = Handler<T, ValidateArgs>;
+export type ValidateHandler<T, U = {}> = Handler<T, ValidateArgs & U>;
 
 export type FormComponentProps<O = any, C = any, T = any> = {
+  className?: string;
   catalogue: FormComponentCatalogue;
   formElement: FormElement<O, C>;
   handlers?: Handlers<DataSet<T>>;
   owner: DataSet<T>;
   readOnly?: boolean;
   hideLabel?: boolean;
+  extra?: any;
   // renderControl?: (
   //   element: FormElement<O, C>,
   //   props: FormComponentProps<O, C, T>,
@@ -66,6 +68,7 @@ export type Option = {
   type?: string;
 };
 
+// [K in keyof T]: Prop;
 export type PropMap = { [index: string]: Prop };
 
 export type Prop = {
@@ -143,6 +146,7 @@ export interface FormElement<O = any, C = any, H = any> {
   tuple?: string;
   tupleOrder?: number;
   css?: string;
+  className?: string;
   source?: string;
   control?: string;
   props?: O;

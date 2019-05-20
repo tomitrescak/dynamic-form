@@ -154,6 +154,9 @@ export const FormStore = types
       return null;
     },
     getValue(item: string): any {
+      if (!item) {
+        return null;
+      }
       const { name, owner } = processPath(item, self);
       return owner[name];
     },
@@ -222,8 +225,8 @@ export const FormStore = types
       },
       replaceRow<T>(key: string, index: number, data: T) {
         let owner = findOwner(key);
-        if (owner.length <= index + 1) {
-          for (let i = owner.length; i <= index + 1; i++) {
+        if (owner.length <= index) {
+          for (let i = owner.length; i <= index; i++) {
             owner.push(undefined);
           }
         }
@@ -350,6 +353,10 @@ export const FormStore = types
         // find current schema
         let keys = [key];
         let field = ownSchema.properties[key];
+
+        if (!field) {
+          throw new Error('Trying to modify dataset path that does not exist: ' + key);
+        }
 
         if (field.validationGroup) {
           // currently we support validation groups only on the same level
