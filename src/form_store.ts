@@ -158,11 +158,17 @@ export const FormStore = types
         return null;
       }
       const { name, owner } = processPath(item, self);
-      return owner[name];
+      if (owner) {
+        return owner[name];
+      }
+      return null;
     },
     getError(item: string): string {
       const { name, owner } = processPath(item, self);
-      return owner.errors.get(name);
+      if (owner) {
+        return owner.errors.get(name);
+      }
+      return null;
     },
     setError(item: string, error: string): void {
       if (item.match(/(\.|\/)/)) {

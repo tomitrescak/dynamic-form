@@ -155,6 +155,7 @@ export interface FormElement<O = any, C = any, H = any> {
   parent?: FormElement<any, any, H>;
   elements?: FormElement<C, any, H>[];
   pages?: FormElement<C, any, H>[];
+  locked?: boolean;
 
   validateHandler?: keyof H;
   visibleHandler?: keyof H;

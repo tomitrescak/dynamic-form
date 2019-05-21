@@ -187,6 +187,19 @@ function buildTree(schema: Schema, definitions: any, addUndo = false) {
           let property = currentSchema;
           do {
             const first = parts.shift();
+
+            // solve references
+            if (property.$ref) {
+              let root = schema;
+              while (root.parent) {
+                root = root.parent;
+              }
+              const refName = property.$ref.split('/')[2];
+              property = root.definitions[refName];
+              if (!property) {
+                throw new Error('Schema does not contain refrence: ' + refName);
+              }
+            }
             property = property.items
               ? property.items.properties[first]
               : property.properties[first];
