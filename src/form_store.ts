@@ -1,5 +1,5 @@
 import { observable, toJS } from 'mobx';
-import { types, getRoot, getParent, detach, IMSTMap } from 'mobx-state-tree';
+import { types, getRoot, getParent, detach, IMSTMap, applySnapshot } from 'mobx-state-tree';
 import Ajv from 'ajv';
 
 import { Schema } from './data_schema_model';
@@ -152,6 +152,9 @@ export const FormStore = types
         return getParent<DataSet>(self, 1);
       } catch {}
       return null;
+    },
+    reset() {
+      applySnapshot(self, {});
     },
     getValue(item: string): any {
       if (!item) {

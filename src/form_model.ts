@@ -41,7 +41,7 @@ export class FormModel {
     // create dataset
     if (jsonSchema) {
       const schema = new Schema(jsonSchema);
-      this.dataSet = buildStore(schema).create(data);
+      this.dataSet = buildStore(schema, null, false).create(data);
 
       // set undo manager
       if (setUndo) {
