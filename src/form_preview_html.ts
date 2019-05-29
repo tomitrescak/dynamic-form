@@ -160,7 +160,6 @@ interface Props {
 export class FormPreviewHtml {
   // lastRow = -1;
   // lastColumn = -1;
-
   //   renderColumn(control: FormElement, owner: DataSet, catalogue: FormComponentCatalogue) {
   //     if (control.row !== this.lastRow) {
   //       this.lastRow = control.row;
@@ -169,7 +168,6 @@ export class FormPreviewHtml {
   //     // we initialise all columns and add missing ones in between
   //     let columns = [];
   //     const formControl = control;
-
   //     let label =
   //       formControl.control === 'Text'
   //         ? `\n${formControl.label}`
@@ -178,7 +176,6 @@ export class FormPreviewHtml {
   //           : formControl.elements && formControl.elements.length
   //             ? `: ${formControl.label.trim()}`
   //             : `${formControl.label.trim()}: `;
-
   //     if (formControl.elements && formControl.elements.length) {
   //       columns.push(`\n== Start${label} ==
   // ${catalogue.components[control.control].toString(control, owner, catalogue)}
@@ -188,18 +185,16 @@ export class FormPreviewHtml {
   //         `${label}${catalogue.components[control.control].toString(control, owner, catalogue)}`
   //       );
   //     }
-
   //     this.lastColumn = control.column + control.width;
   //     return columns;
   //   }
-
-  render(formControl: FormElement, owner: DataSet, catalogue: FormComponentCatalogue) {
-    return formControl.elements
-      .map(
-        row =>
-          (catalogue.components[row.control] as FormComponent).toHtml &&
-          (catalogue.components[row.control] as FormComponent).toHtml(row, owner, catalogue)
-      )
-      .join('\n');
-  }
+  // render(formControl: FormElement, owner: DataSet, catalogue: FormComponentCatalogue) {
+  //   return formControl.elements
+  //     .map(
+  //       row =>
+  //         (catalogue.components[row.control] as FormComponent).toHtml &&
+  //         (catalogue.components[row.control] as FormComponent).toHtml(owner, { formElement: row}, null, catalogue)
+  //     )
+  //     .join('\n');
+  // }
 }

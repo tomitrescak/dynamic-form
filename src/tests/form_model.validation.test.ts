@@ -23,7 +23,7 @@ describe('FormModel: validation', () => {
       elements: [
         {
           control: 'Input',
-          source: 'code'
+          props: { value: { source: 'code' } }
         }
       ]
     };
@@ -60,7 +60,7 @@ describe('FormModel: validation', () => {
       elements: [
         {
           control: 'Input',
-          source: 'code'
+          props: { value: { source: 'code' } }
         }
       ]
     };

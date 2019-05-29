@@ -32,7 +32,7 @@ export class FormModel {
 
   constructor(form: FormElement, jsonSchema: JSONSchema, data: any, setUndo = true) {
     let formWithProps = this.addControlProps(form);
-    this.name = formWithProps.label;
+    this.name = formWithProps.props.label;
     this.description = formWithProps.documentation;
     this.elements = formWithProps.elements;
     this.formDefinition = formWithProps;
@@ -68,34 +68,30 @@ export class FormModel {
       return;
     }
     let result = { ...element };
-    if (!element.props) {
-      result.props = {};
-    } else {
-      result.props = { ...element.props };
-    }
+    result.props = { ...element.props };
+
     if (!result.props.control) {
       result.props.control = element.control;
     }
-
     if (result.elements) {
       result.elements = this.addArrayProps(result, result.elements);
     }
-
     if (result.pages) {
       result.pages = this.addArrayProps(result, result.pages);
     }
-
     return result;
   }
 
   createHtmlPreview() {
     let formPreview = new FormPreviewHtml();
-    return formPreview.render(this, this.dataSet, this.catalogue);
+    // return formPreview.render(this, this.dataSet, this.catalogue);
+    return '';
   }
 
   createTextPreview() {
     let textPreview = new FormPreviewText();
-    return textPreview.render(this, this.dataSet, this.catalogue);
+    // return textPreview.render(this, this.dataSet, this.catalogue);
+    return '';
   }
 
   validateWithReport(

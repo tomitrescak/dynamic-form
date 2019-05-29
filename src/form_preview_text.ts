@@ -52,8 +52,9 @@ export class FormPreviewText {
     // this.lastColumn = 0;
     // this.lastRow = 0;
 
-    return formControl.elements
-      .map(row => catalogue.components[row.control].toString(row, owner, catalogue))
-      .join('\n');
+    // return formControl.elements
+    //   .map(row => catalogue.components[row.control].toString(row, owner, catalogue))
+    //   .join('\n');
+    return '';
   }
 }

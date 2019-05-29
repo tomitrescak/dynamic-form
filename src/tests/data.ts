@@ -2,10 +2,11 @@ import { FormElement } from '../form_definition';
 
 export const create = {
   formElement: (formElement: Partial<FormElement> = {}): FormElement => ({
-    source: 'source',
-    label: 'Label',
     control: null,
-    props: null,
+    props: {
+      source: 'source',
+      label: 'Label'
+    },
     elements: [],
     ...formElement
   }),

@@ -6,7 +6,7 @@ it('creates a new model', () => {
     {
       documentation: 'Desc',
       elements: [],
-      label: 'Name'
+      props: { label: 'Name' }
     },
     null,
     null
@@ -30,7 +30,7 @@ describe('Preview', () => {
       {
         documentation: 'Desc',
         elements: [],
-        label: 'Name'
+        props: { label: 'Name' }
       },
       null,
       null
@@ -48,115 +48,170 @@ describe('Preview', () => {
     let model = new FormModel(
       {
         documentation: 'Desc',
+        props: { label: 'Name' },
         elements: [
           {
             props: {
               column: 0,
               row: 0,
-              width: 4
+              width: 4,
+              label: 'Input Label',
+              value: { source: 'input' }
             },
-            label: 'Input Label',
-            source: 'input',
             control: 'Input'
           },
           {
-            props: { row: 0, column: 6, width: 3 },
-            label: 'Formula Label',
-            source: 'formula',
+            props: {
+              row: 0,
+              column: 6,
+              width: 3,
+              label: 'Formula Label',
+              value: { source: 'formula' }
+            },
             control: 'Formula'
           },
           {
-            props: { row: 0, column: 15, width: 1 },
-            label: 'Text Label',
-            source: 'text',
+            props: {
+              row: 0,
+              column: 15,
+              width: 1,
+              label: 'Text Label',
+              value: { source: 'text' }
+            },
             control: 'Text'
           },
           {
-            props: { row: 1, column: 3, width: 5, list: 'select' },
-            label: 'Select Label',
-            source: 'select',
+            props: {
+              row: 1,
+              column: 3,
+              width: 5,
+              list: 'select',
+              label: 'Select Label',
+              value: { source: 'select' }
+            },
+
             control: 'Select'
           },
           {
-            props: { row: 1, column: 10, width: 1 },
-            label: 'Check Yes',
-            source: 'checkYes',
+            props: {
+              row: 1,
+              column: 10,
+              width: 1,
+              label: 'Check Yes',
+              value: { source: 'checkYes' }
+            },
             control: 'Checkbox'
           },
           {
-            props: { row: 1, column: 11, width: 1 },
-            label: 'Check No',
-            source: 'checkNo',
+            props: {
+              row: 1,
+              column: 11,
+              width: 1,
+              label: 'Check No',
+              value: { source: 'checkNo' }
+            },
+
             control: 'Checkbox'
           },
           {
-            props: { row: 1, column: 15, width: 1, list: 'radio' },
-            label: 'Radio',
-            source: 'radio',
+            props: {
+              row: 1,
+              column: 15,
+              width: 1,
+              list: 'radio',
+              label: 'Radio',
+              value: { source: 'radio' }
+            },
+
             control: 'Radio'
           },
           {
-            props: { row: 1, column: 16, width: 1 },
-            label: 'Dean Signature',
-            source: 'signature',
+            props: {
+              row: 1,
+              column: 16,
+              width: 1,
+              label: 'Dean Signature',
+              value: { source: 'signature' }
+            },
+
             control: 'Signature'
           },
           {
-            props: { row: 2, column: 0, width: 8 },
-            label: 'Repeater Label',
-            source: 'repeater',
+            props: {
+              row: 2,
+              column: 0,
+              width: 8,
+              label: 'Repeater Label',
+              value: { source: 'repeater' }
+            },
+
             control: 'Repeater',
             elements: [
               {
-                props: { column: 0, row: 0, width: 8 },
-                label: 'IR Label 1',
-                source: 'input',
+                props: {
+                  column: 0,
+                  row: 0,
+                  width: 8,
+                  label: 'IR Label 1',
+                  value: { source: 'input' }
+                },
                 control: 'Input'
               },
               {
-                props: { column: 8, row: 0, width: 8 },
-                label: 'IR Label 2',
-                source: 'input',
+                props: {
+                  column: 8,
+                  row: 0,
+                  width: 8,
+                  label: 'IR Label 2',
+                  value: { source: 'input' }
+                },
                 control: 'Input'
               }
             ]
           },
           {
-            props: { row: 2, column: 9, width: 3 },
-            label: 'Table Label',
-            source: 'repeater',
+            props: {
+              row: 2,
+              column: 9,
+              width: 3,
+              label: 'Table Label',
+              value: { source: 'repeater' }
+            },
             control: 'Table',
             elements: [
               {
-                props: { width: 8 },
-                label: 'IR Label 1',
-                source: 'input',
+                props: { width: 8, label: 'IR Label 1', value: { source: 'input' } },
                 control: 'Input'
               },
               {
-                props: { width: 8 },
-                label: 'IR Label 2',
-                source: 'input',
+                props: { width: 8, label: 'IR Label 2', value: { source: 'input' } },
                 control: 'Input'
               }
             ]
           },
           {
-            props: { row: 3, column: 0, width: 16 },
-            label: 'Form Label',
-            source: 'form',
+            props: {
+              row: 3,
+              column: 0,
+              width: 16,
+              label: 'Form Label',
+              value: { source: 'form' }
+            },
             control: 'Form',
             elements: [
               {
-                props: { row: 0, column: 0, width: 16 },
-                label: 'Item Label',
-                source: 'input',
+                props: {
+                  row: 0,
+                  column: 0,
+                  width: 16,
+                  label: 'Item Label',
+                  value: { source: 'input' }
+                },
                 control: 'Input'
               }
             ]
           }
-        ],
-        label: 'Name'
+        ]
       },
       {
         type: 'object',

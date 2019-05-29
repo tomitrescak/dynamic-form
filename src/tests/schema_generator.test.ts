@@ -1,6 +1,6 @@
 import { generateSchema } from '../schema_generator';
 
-it('generates schema from resources', () => {
+xit('generates schema from resources', () => {
   const schema = {
     type: 'object',
     default: ['foo'],

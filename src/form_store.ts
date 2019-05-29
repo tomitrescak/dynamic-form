@@ -277,6 +277,7 @@ export const FormStore = types
           const { name, owner } = processPath(key, self);
           owner.setValue(name, value);
         } else {
+          value = this.parseValue(key, value);
           if ((self as any)[key] !== value) {
             (self as any)[key] = value;
             if (config.setDirty) {
