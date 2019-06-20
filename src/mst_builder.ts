@@ -48,43 +48,56 @@ function mstTypeFactory(desc: Schema, mst: any, definitions: any): any {
 
   switch (desc.type) {
     case 'array':
-      return types.optional(
-        types.array(
-          types.optional(mstTypeFactory(desc.items, mst, definitions), desc.items.defaultValue)
+      return types.union(
+        types.optional(
+          types.array(
+            types.optional(mstTypeFactory(desc.items, mst, definitions), desc.items.defaultValue)
+          ),
+          desc.default || []
         ),
-        desc.default || []
+        types.optional(BoundSchema, {})
       );
     case 'string':
       if (desc.format === 'date-time') {
         return types.optional(
           types.union(types.Date, types.string, types.undefined, types.null),
-          desc.default || ''
+          desc.default || null
         );
       }
       return types.optional(
         types.union(types.string, types.undefined, types.null),
-        desc.default || ''
+        desc.default || null
       );
     case 'integer':
       return types.optional(
         types.union(types.number, types.string, types.undefined, types.null),
-        desc.default || ''
+        desc.default || null
       );
     case 'number':
       return types.optional(
         types.union(types.number, types.string, types.undefined, types.null),
-        desc.default || ''
+        desc.default || null
       );
     case 'boolean':
       return types.optional(
         types.union(types.boolean, types.string, types.undefined, types.null),
-        desc.default || ''
+        desc.default || null
       );
     case 'object':
       if (!desc.properties) {
         return types.optional(PropMap, {});
       }
-      return types.optional(buildTree(desc, definitions), {});
+      // if (desc.bound) {
+      //   return types.union(types.string, types.number, types.boolean, types.optional(buildTree(desc, definitions), {}));
+      // }
+      return types.union(
+        types.string,
+        types.number,
+        types.boolean,
+        types.null,
+        types.undefined,
+        types.optional(buildTree(desc, definitions), {})
+      );
     case undefined:
       return types.string;
   }
@@ -202,7 +215,9 @@ function buildTree(schema: Schema, definitions: any, addUndo = false) {
             }
             property = property.items
               ? property.items.properties[first]
-              : property.properties[first];
+              : property.properties
+              ? property.properties[first]
+              : null;
 
             if (!property) {
               if (throwError) {
@@ -235,6 +250,20 @@ function buildTree(schema: Schema, definitions: any, addUndo = false) {
 
   return mst;
 }
+
+const BoundSchema = buildTree(
+  new Schema({
+    type: 'object',
+    properties: {
+      value: { type: 'string' },
+      handler: { type: 'string' },
+      source: { type: 'string' },
+      validate: { type: 'string' },
+      parse: { type: 'string' }
+    }
+  }),
+  {}
+);
 
 type FT = typeof FormStore.Type;
 

@@ -48,6 +48,7 @@
     "ajv": "^6.10.0",
     "ajv-errors": "^1.0.1",
     "deepmerge": "^3.2.0",
-    "mocha-jest-snapshots": "^1.0.7"
+    "mocha-jest-snapshots": "^1.0.7",
+    "typescript": "^3.5.2"
   }
 }

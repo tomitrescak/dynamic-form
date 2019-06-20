@@ -1,5 +1,5 @@
 import { observable, toJS } from 'mobx';
-import { types, getRoot, getParent, detach, IMSTMap, applySnapshot } from 'mobx-state-tree';
+import { types, getRoot, getParent, detach, applySnapshot, Instance } from 'mobx-state-tree';
 import Ajv from 'ajv';
 
 import { Schema } from './data_schema_model';
@@ -7,10 +7,13 @@ import { config } from './config';
 
 export type IValidator = (input: string) => string;
 
-export type DataSet<T = {}> = typeof FormStore.Type &
-  Readonly<T> & {
-    parent: DataSet<T>;
-  };
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IFormStore extends Instance<typeof FormStore> {}
+
+export type DataSet<T = {}> = IFormStore &
+Readonly<T> & {
+  parent: DataSet<T>;
+};
 
 export type ValidationResult = {
   required: number;
@@ -161,6 +164,13 @@ export const FormStore = types
         return null;
       }
       const { name, owner } = processPath(item, self);
+      // perform extra checks for arrays
+      if (Array.isArray(owner)) {
+        if (owner.length > name) {
+          return owner[name];
+        }
+        return null;
+      }
       if (owner) {
         return owner[name];
       }
@@ -226,7 +236,16 @@ export const FormStore = types
         return self.getSchema(key).required;
       },
       parseValue(key: string, value: any) {
-        return self.getSchema(key).tryParse(value);
+        let schema = self.getSchema(key);
+        if (
+          schema.type === 'object' &&
+          schema.properties &&
+          schema.properties.value &&
+          schema.properties.handler
+        ) {
+          schema = schema.properties.value;
+        }
+        return schema.tryParse(value);
       },
       insertRow<T>(key: string, index: number, data: T) {
         findOwner(key).splice(index, 0, data);
@@ -245,11 +264,21 @@ export const FormStore = types
       moveRow(key: string, from: number, to: number) {
         let owner = findOwner(key);
         let data: any;
+        let s = self as any;
+        let toItem: any;
+
+        if (to != null) {
+          toItem = s[key][to];
+        }
+
         if (from != null) {
           data = toJS(owner[from]);
           owner.splice(from, 1);
         }
+
         if (to != null) {
+          to = s[key].indexOf(toItem);
+          to = to == -1 ? s[key].length : to;
           owner.splice(to, 0, data);
         }
       },
