@@ -11,14 +11,14 @@
     "forceConsistentCasingInFileNames": true,
     "module": "commonjs",
     "moduleResolution": "node",
-    "outDir": "dist",
+    "outDir": "dist/cjs/",
     "noEmit": false,
     "jsx": "react",
     "skipDefaultLibCheck": true,
     "strictNullChecks": false,
     "isolatedModules": false,
     "declaration": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "plugins": [
       {
         "name": "typescript-tslint-plugin",
