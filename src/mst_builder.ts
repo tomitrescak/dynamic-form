@@ -188,12 +188,14 @@ function buildTree(schema: Schema, definitions: any, addUndo = false) {
     .actions(self => ({
       getSchema(key: string, throwError = true) {
         let currentSchema = schema;
+        let currentProperties = schemaProperties;
         if (!key) {
           return currentSchema;
         }
         if (key && key[0] === '/') {
           key = key.substring(1);
           currentSchema = self.root().getSchema(); // TODO: Possibly this should be set to root
+          currentProperties = currentSchema.properties;
         }
         if (key.indexOf('.') >= 0) {
           const parts = key.split('.');
@@ -216,8 +218,8 @@ function buildTree(schema: Schema, definitions: any, addUndo = false) {
             property = property.items
               ? property.items.properties[first]
               : property.properties
-              ? property.properties[first]
-              : null;
+                ? property.properties[first]
+                : null;
 
             if (!property) {
               if (throwError) {
@@ -233,12 +235,12 @@ function buildTree(schema: Schema, definitions: any, addUndo = false) {
           return property;
         }
 
-        const value = key ? schemaProperties[key] : currentSchema;
+        const value = key ? currentProperties[key] : currentSchema;
         if (!value) {
           if (throwError) {
             throw new Error(
               `Could not find key '${key}' in schema with properties [${Object.getOwnPropertyNames(
-                schemaProperties
+                currentProperties
               ).join(',')}]`
             );
           }
